@@ -113,12 +113,66 @@ public class Model extends Observable {
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
+        this.board.setViewingPerspective(side);
+        changed = helper();
+        this.board.setViewingPerspective(Side.NORTH);
 
         checkGameOver();
         if (changed) {
             setChanged();
         }
         return changed;
+    }
+
+    private boolean helper() {
+        int size = this.board.size();
+        boolean valid = false;
+        for (int c=0; c<size; c++) {
+             if (normalMove(c,size-2, size)) {valid=true;}
+        }
+        return valid;
+    }
+
+    private boolean normalMove(int c, int r, int size) {
+        if (r>=0) {
+            if (this.board.tile(c, r) != null) {
+                for (int i = r + 1; i < size; i++) {
+                    if (this.board.tile(c, i) != null) {
+                        if (this.board.tile(c, r).value() == this.board.tile(c, i).value()) {
+                            this.board.move(c, i, this.board.tile(c, r));
+                            this.score += this.board.tile(c, i).value();
+                            noMergeMove(c, r - 1, size);
+                            return true;
+                        } else {
+                            this.board.move(c, i-1, this.board.tile(c, r));
+                            return normalMove(c, r - 1, size) || i!=r;
+                        }
+                    }
+                }
+                this.board.move(c, size - 1, this.board.tile(c, r));
+                normalMove(c, r - 1, size);
+                return true;
+            }
+            else return normalMove(c, r-1, size);
+        }
+        return false;
+    }
+
+    private void noMergeMove(int c, int r, int size) {
+        if (r>=0) {
+            if (this.board.tile(c, r) != null) {
+                for (int i = r + 1; i < size; i++) {
+                    if (this.board.tile(c, i) != null) {
+                        this.board.move(c, i - 1, this.board.tile(c, r));
+                        normalMove(c, r - 1, size);
+                        return ;
+                    }
+                }
+                this.board.move(c, size - 1, this.board.tile(c, r));
+                normalMove(c, r - 1, size);
+            }
+            else noMergeMove(c, r - 1, size);
+        }
     }
 
     /** Checks if the game is over and sets the gameOver variable
@@ -138,6 +192,16 @@ public class Model extends Observable {
      * */
     public static boolean emptySpaceExists(Board b) {
         // TODO: Fill in this function.
+        int size = b.size();
+        int c = 0, r = 0;
+        while (c < size) {
+            while (r < size) {
+                if (b.tile(c, r) == null) return true;
+                r += 1;
+            }
+            r = 0;
+            c += 1;
+        }
         return false;
     }
 
@@ -148,6 +212,16 @@ public class Model extends Observable {
      */
     public static boolean maxTileExists(Board b) {
         // TODO: Fill in this function.
+        int size = b.size();
+        int c = 0, r = 0;
+        while (c < size) {
+            while (r < size) {
+                if (b.tile(c, r) != null && b.tile(c, r).value() == MAX_PIECE) return true;
+                r += 1;
+            }
+            r = 0;
+            c += 1;
+        }
         return false;
     }
 
@@ -159,6 +233,36 @@ public class Model extends Observable {
      */
     public static boolean atLeastOneMoveExists(Board b) {
         // TODO: Fill in this function.
+        int size = b.size();
+        if (emptySpaceExists(b)) return true;
+        int c = 0, r = 0;
+        while (c < size) {
+            while (r < size) {
+                int v = b.tile(c, r).value();
+                if (c == 0) {
+                    if (b.tile(c+1, r).value() == v) return true;
+                }
+                if (c == size-1) {
+                    if (b.tile(c-1,r).value() == v) return true;
+                }
+                if (0<c && c<size-1) {
+                    if (b.tile(c+1, r).value() == v || b.tile(c-1,r).value() == v) return true;
+                }
+
+                if (r == 0) {
+                    if (b.tile(c, r+1).value() == v) return true;
+                }
+                if (r == size-1) {
+                    if (b.tile(c,r-1).value() == v) return true;
+                }
+                if (0<r && r<size-1) {
+                    if (b.tile(c, r+1).value() == v || b.tile(c,r-1).value() == v) return true;
+                }
+                r += 1;
+            }
+            r = 0;
+            c += 1;
+        }
         return false;
     }
 
