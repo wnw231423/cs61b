@@ -141,7 +141,7 @@ public class ArrayDequeTest {
         i = 0;
         while (i<3){
             int r1 = ls1.removeLast();
-            assertEquals(r1, 2-i);
+            assertEquals(2-i, r1);
             i++;
         }
     }
@@ -159,7 +159,7 @@ public class ArrayDequeTest {
         i = 0;
         while (i<3){
             int r1 = ls1.removeFirst();
-            assertEquals(r1, 2-i);
+            assertEquals(2-i, r1);
             i++;
         }
     }
@@ -177,7 +177,7 @@ public class ArrayDequeTest {
         i = 0;
         while (i<3){
             int r1 = ls1.removeFirst();
-            assertEquals(r1, i);
+            assertEquals(i, r1);
             i++;
         }
     }
@@ -191,7 +191,7 @@ public class ArrayDequeTest {
         }
         for (int i=0; i<8; i++) {
             int temp = ls1.get(i);
-            assertEquals(temp, i);
+            assertEquals(i, temp);
         }
 
         assertNull(ls1.get(8));
@@ -242,7 +242,7 @@ public class ArrayDequeTest {
         A.addLast(3);
         int i = 1;
         for (int num: A) {
-            assertEquals(num, i);
+            assertEquals(i, num);
             i++;
         }
     }
