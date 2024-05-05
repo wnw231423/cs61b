@@ -40,9 +40,6 @@ public class ArrayDequeTest {
 
         lld1.addLast("back");
         assertEquals(3, lld1.size());
-
-        System.out.println("Printing out deque: ");
-        lld1.printDeque();
     }
 
     @Test
@@ -235,5 +232,38 @@ public class ArrayDequeTest {
                 assertEquals(r2, r1);
             }
         }
+    }
+
+    @Test
+    public void testIteration() {
+        ArrayDeque<Integer> A = new ArrayDeque<>();
+        A.addLast(1);
+        A.addLast(2);
+        A.addLast(3);
+        int i = 1;
+        for (int num: A) {
+            assertEquals(num, i);
+            i++;
+        }
+    }
+
+    @Test
+    public void testEquals() {
+        ArrayDeque<Integer> A = new ArrayDeque<>();
+        ArrayDeque<Integer> B = new ArrayDeque<>();
+        ArrayDeque<Integer> C = new ArrayDeque<>();
+        int[] array = {1, 2, 3};
+
+        int i = 1;
+        while (i<=3) {
+            A.addLast(i);
+            B.addLast(i);
+            C.addLast(3-i);
+            i++;
+        }
+
+        assertTrue(A.equals(B));
+        assertFalse(A.equals(C));
+        assertFalse(A.equals(array));
     }
 }

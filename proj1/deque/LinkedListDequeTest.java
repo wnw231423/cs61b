@@ -188,4 +188,37 @@ public class LinkedListDequeTest {
 
         assertNull(ls1.get(8));
     }
+
+    @Test
+    public void testIteration() {
+        LinkedListDeque<Integer> A = new LinkedListDeque<>();
+        A.addLast(1);
+        A.addLast(2);
+        A.addLast(3);
+        int i = 1;
+        for (int num: A) {
+            assertEquals(num, i);
+            i++;
+        }
+    }
+
+    @Test
+    public void testEquals() {
+        LinkedListDeque<Integer> A = new LinkedListDeque<>();
+        LinkedListDeque<Integer> B = new LinkedListDeque<>();
+        LinkedListDeque<Integer> C = new LinkedListDeque<>();
+        int[] array = {1, 2, 3};
+
+        int i = 1;
+        while (i<=3) {
+            A.addLast(i);
+            B.addLast(i);
+            C.addLast(3-i);
+            i++;
+        }
+
+        assertTrue(A.equals(B));
+        assertFalse(A.equals(C));
+        assertFalse(A.equals(array));
+    }
 }

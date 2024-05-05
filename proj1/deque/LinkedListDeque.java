@@ -1,6 +1,8 @@
 package deque;
 
-public class LinkedListDeque<T> {
+import java.util.Iterator;
+
+public class LinkedListDeque<T> implements Iterable<T>{
     public static class Node<T>{
         public T item;
         public Node<T> next;
@@ -121,29 +123,48 @@ public class LinkedListDeque<T> {
         }
     }
 
-//    public Iterable<T> iterator(){
-//        //TODO
-//    }
-
-    public boolean equals(Object o){
-        if (!(o instanceof LinkedListDeque)){
-            return false;
-        } else if (size != ((LinkedListDeque<?>) o).size){
-            return false;
-        } else if (size == 0){
+    public boolean equals(Object o) {
+        if (this == o) {
             return true;
+        } else if (!(this.getClass() == o.getClass())) {
+            return false;
+        } else if (this.size!=((LinkedListDeque<?>) o).size) {
+            return false;
         } else {
-            Node<T> temp1 = head.next;
-            Node<?> temp2 = ((LinkedListDeque<?>) o).head.next;
-            //I have no idea how to check T is ? or not.
-            while (temp1 != head){
-                if (temp1.item != temp2.item){
+            for (int i = 0; i<size; i++) {
+                if (!get(i).equals(((LinkedListDeque<?>) o).get(i))) {
                     return false;
                 }
-                temp1 = temp1.next;
-                temp2 = temp2.next;
             }
-            return true;
+        } return true;
+    }
+
+    @Override
+    public Iterator<T> iterator() {
+        return new LinkedListDequeIterator<T>();
+    }
+
+    private class LinkedListDequeIterator<T> implements Iterator<T> {
+        private int wizPos;
+
+        LinkedListDequeIterator(){
+            wizPos  = 0;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return wizPos <= size-1;
+        }
+
+        @Override
+        public T next() {
+            if (hasNext()) {
+                T res = (T) get(wizPos);
+                wizPos += 1;
+                return res;
+            } else {
+                return null;
+            }
         }
     }
 }
