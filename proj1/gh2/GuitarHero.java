@@ -7,8 +7,8 @@ public class GuitarHero {
     static String keyboard = "q2we4r5ty7u8i9op-[=zxdcfvgbnjmk,.;/' ";
 
     public static void initial(GuitarString[] strings) {
-        for (int i = 0; i<keyboard.length(); i++) {
-            double frequency = 440 * Math.pow(2, (double) (i - 24) /12);
+        for (int i = 0; i < keyboard.length(); i++) {
+            double frequency = 440 * Math.pow(2, (double) (i - 24) / 12);
             strings[i] = new GuitarString(frequency);
         }
     }

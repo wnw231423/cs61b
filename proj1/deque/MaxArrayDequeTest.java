@@ -5,7 +5,7 @@ import static org.junit.Assert.*;
 import java.util.Comparator;
 
 public class MaxArrayDequeTest {
-    public static class IntegerComparator implements Comparator<Integer> {
+    private static class IntegerComparator implements Comparator<Integer> {
 
         @Override
         public int compare(Integer o1, Integer o2) {
@@ -13,7 +13,7 @@ public class MaxArrayDequeTest {
         }
     }
 
-    public static class WeirdIntegerComparator implements Comparator<Integer> {
+    private static class WeirdIntegerComparator implements Comparator<Integer> {
         @Override
         public int compare(Integer o1, Integer o2) {
             return -(o1-o2);

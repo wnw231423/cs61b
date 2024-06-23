@@ -209,6 +209,7 @@ public class LinkedListDequeTest {
         LinkedListDeque<Integer> A = new LinkedListDeque<>();
         LinkedListDeque<Integer> B = new LinkedListDeque<>();
         LinkedListDeque<Integer> C = new LinkedListDeque<>();
+        ArrayDeque<Integer> D = new ArrayDeque<>();
         int[] array = {1, 2, 3};
 
         int i = 1;
@@ -216,11 +217,13 @@ public class LinkedListDequeTest {
             A.addLast(i);
             B.addLast(i);
             C.addLast(3-i);
+            D.addLast(i);
             i++;
         }
 
         assertTrue(A.equals(B));
         assertFalse(A.equals(C));
+        assertTrue(A.equals(D));
         assertFalse(A.equals(array));
     }
 }

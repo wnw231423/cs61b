@@ -2,7 +2,7 @@ package deque;
 
 import java.util.Iterator;
 
-public class ArrayDeque<T> implements Iterable<T>, Deque<T>{
+public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
     private int size;
     private int head;
     private int rear;
@@ -19,20 +19,20 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T>{
 
     @Override
     public void addFirst(T item) {
-        if (size + 1 >= arraySize){
-            resize(2*arraySize);
+        if (size + 1 >= arraySize) {
+            resize(2 * arraySize);
         }
         array[head] = item;
-        head = (head+arraySize-1)%arraySize;
+        head = (head + arraySize - 1) % arraySize;
         size += 1;
     }
 
     @Override
     public void addLast(T item) {
         if (size + 1 >= arraySize){
-            resize(2*arraySize);
+            resize(2 * arraySize);
         }
-        rear = (rear+1)%arraySize;
+        rear = (rear + 1) % arraySize;
         array[rear] = item;
         size += 1;
     }
@@ -44,10 +44,10 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T>{
         }
         if (arraySize>=16) {
             if (4*(size-1) < arraySize) {
-                resize(arraySize/2);
+                resize(arraySize / 2);
             }
         }
-        head = (head+1)%arraySize;
+        head = (head + 1) % arraySize;
         T res = array[head];
         array[head] = null;
         size -= 1;
@@ -59,14 +59,14 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T>{
         if (isEmpty()) {
             return null;
         }
-        if (arraySize>=16) {
-            if (4*(size-1) < arraySize) {
-                resize(arraySize/2);
+        if (arraySize >= 16) {
+            if (4 * (size-1) < arraySize) {
+                resize(arraySize / 2);
             }
         }
         T res = array[rear];
         array[rear] = null;
-        rear = (rear-1+arraySize)%arraySize;
+        rear = (rear - 1 + arraySize) % arraySize;
         size -= 1;
         return res;
     }
@@ -74,7 +74,7 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T>{
     @Override
     public void printDeque() {
         int index = 0;
-        while (index!=size){
+        while (index != size) {
             System.out.print(get(index) + " ");
             index += 1;
         }
@@ -82,8 +82,8 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T>{
     }
 
     @Override
-    public int size() {
-        return size;
+    public int size(){
+            return size;
     }
 
     @Override
@@ -91,20 +91,23 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T>{
         if (index > size() - 1) {
             return null;
         } else {
-            return array[(head+index+1)%arraySize];
+            return array[(head + index + 1) % arraySize];
         }
     }
 
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        } else if (!(this.getClass() == o.getClass())) {
+        if (o == null) {
             return false;
-        } else if (this.size!=((ArrayDeque<?>) o).size) {
+        }
+        else if (this == o) {
+            return true;
+        } else if (!(o instanceof Deque<?>)) {
+            return false;
+        } else if (this.size != ((Deque<?>) o).size()) {
             return false;
         } else {
-            for (int i = 0; i<size; i++) {
-                if (!get(i).equals(((ArrayDeque<?>) o).get(i))) {
+            for (int i = 0; i < size; i++) {
+                if (!get(i).equals(((Deque<?>) o).get(i))) {
                     return false;
                 }
             }
@@ -113,8 +116,8 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T>{
 
     private void resize(int x) {
         T[] resizedArray = (T[]) new Object[x];
-        for (int i=0; i<size; i++) {
-            resizedArray[i+1] = get(i);
+        for (int i = 0; i < size; i++) {
+            resizedArray[i + 1] = get(i);
         }
         arraySize = x;
         head = 0;
@@ -131,7 +134,7 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T>{
 
         @Override
         public boolean hasNext() {
-            return wizPos <= size-1;
+            return wizPos <= size - 1;
         }
 
         @Override
