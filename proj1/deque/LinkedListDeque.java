@@ -4,9 +4,9 @@ import java.util.Iterator;
 
 public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
     private static class Node<T> {
-        public T item;
-        public Node<T> next;
-        public Node<T> last;
+        private T item;
+        private Node<T> next;
+        private Node<T> last;
 
         public Node(T item) {
             this.item = item;
@@ -102,7 +102,7 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
             int i = 0;
             Node<T> temp = head.next;
 
-            while (i != index){
+            while (i != index) {
                 i++;
                 temp = temp.next;
             }
@@ -128,8 +128,7 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
     public boolean equals(Object o) {
         if (o == null) {
             return false;
-        }
-        else if (this == o) {
+        } else if (this == o) {
             return true;
         } else if (!(o instanceof Deque<?>)) {
             return false;
@@ -141,7 +140,8 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
                     return false;
                 }
             }
-        } return true;
+            return true;
+        }
     }
 
     @Override
@@ -158,7 +158,7 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
 
         @Override
         public boolean hasNext() {
-            return wizPos <= size-1;
+            return wizPos <= size - 1;
         }
 
         @Override

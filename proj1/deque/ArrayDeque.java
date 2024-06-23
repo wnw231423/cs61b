@@ -29,7 +29,7 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
 
     @Override
     public void addLast(T item) {
-        if (size + 1 >= arraySize){
+        if (size + 1 >= arraySize) {
             resize(2 * arraySize);
         }
         rear = (rear + 1) % arraySize;
@@ -42,8 +42,8 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
         if (isEmpty()) {
             return null;
         }
-        if (arraySize>=16) {
-            if (4*(size-1) < arraySize) {
+        if (arraySize >= 16) {
+            if (4 * (size - 1) < arraySize) {
                 resize(arraySize / 2);
             }
         }
@@ -60,7 +60,7 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
             return null;
         }
         if (arraySize >= 16) {
-            if (4 * (size-1) < arraySize) {
+            if (4 * (size - 1) < arraySize) {
                 resize(arraySize / 2);
             }
         }
@@ -82,8 +82,8 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
     }
 
     @Override
-    public int size(){
-            return size;
+    public int size() {
+        return size;
     }
 
     @Override
@@ -98,8 +98,7 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
     public boolean equals(Object o) {
         if (o == null) {
             return false;
-        }
-        else if (this == o) {
+        } else if (this == o) {
             return true;
         } else if (!(o instanceof Deque<?>)) {
             return false;
@@ -111,7 +110,8 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
                     return false;
                 }
             }
-        } return true;
+            return true;
+        }
     }
 
     private void resize(int x) {
@@ -128,7 +128,7 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
     private class ArrayDequeIterator<T> implements Iterator<T> {
         private int wizPos;
 
-        ArrayDequeIterator(){
+        ArrayDequeIterator() {
             wizPos  = 0;
         }
 
