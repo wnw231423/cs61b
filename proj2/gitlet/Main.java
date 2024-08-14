@@ -1,7 +1,7 @@
 package gitlet;
 
 /** Driver class for Gitlet, a subset of the Git version-control system.
- *  @author TODO
+ *  @author wnw231423
  */
 public class Main {
 
@@ -13,7 +13,11 @@ public class Main {
         String firstArg = args[0];
         switch(firstArg) {
             case "init":
-                // TODO: handle the `init` command
+                if (args.length != 1) {
+                    Utils.message("Incorrect operands.");
+                    System.exit(0);
+                }
+                Repository.init();
                 break;
             case "add":
                 // TODO: handle the `add [filename]` command
