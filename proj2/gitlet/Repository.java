@@ -1,7 +1,8 @@
 package gitlet;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.Map;
+import java.util.TreeMap;
 
 import static gitlet.Utils.*;
 
@@ -24,6 +25,10 @@ public class Repository {
     public static final File HEAD_POINTER = join(BRANCH_DIR, "head");
     /** The master pointer */
     public static final File MASTER_POINTER = join(BRANCH_DIR, "master");
+    /** The stage area */
+    public static final File STAGE = join(GITLET_DIR, "stage");
+    /** The Blobs directory. */
+    public static final File BLOBS_DIR = join(GITLET_DIR, "blobs");
 
     public static void init() {
         if (GITLET_DIR.exists()) {
@@ -34,23 +39,49 @@ public class Repository {
         GITLET_DIR.mkdir();
         COMMIT_DIR.mkdir();
         BRANCH_DIR.mkdir();
+        BLOBS_DIR.mkdir();
 
         //initCommit
-        Commit initCommit = new Commit(null, "initial commit", new ArrayList<>());
-        Utils.writeObject(HEAD_POINTER, initCommit);
-        Utils.writeObject(MASTER_POINTER, initCommit);
+        Commit initCommit = new Commit(null, "initial commit", new TreeMap<>());
+        initCommit.doCommit();
+        Utils.writeContents(HEAD_POINTER, initCommit.getSha1());
+        Utils.writeContents(MASTER_POINTER, initCommit.getSha1());
+
+        //Create stage
+        Stage stage = new Stage();
+        Utils.writeObject(STAGE, stage);
     }
 
-    private static Commit getHeadCommit() {
-        Commit res = Utils.readObject(HEAD_POINTER, Commit.class);
-        res.restoreParent();
-        return res;
+    /** Check if there exists .gitlet dir so that other commands works. */
+    public static void checkInit() {
+        if (!GITLET_DIR.exists()) {
+            System.exit(0);
+        }
     }
 
-    private static Commit getMasterCommit() {
-        Commit res = Utils.readObject(MASTER_POINTER, Commit.class);
-        res.restoreParent();
-        return res;
+    public static void add(String fileName) {
+        Stage stage = Utils.readObject(STAGE, Stage.class);
+        stage.addFile(fileName);
+    }
+
+    public static void commit(String message) {
+        Stage stage = Utils.readObject(STAGE, Stage.class);
+        if (!stage.clearStage()) {
+            Utils.message("No changes added to the commit.");
+            System.exit(0);
+        }
+
+        String currentCommitCode = getHeadCommitCode();
+        Commit commit = new Commit(currentCommitCode, message, stage.getTrackedList());
+        commit.doCommit();
+    }
+
+    private static String getHeadCommitCode() {
+        return Utils.readContentsAsString(HEAD_POINTER);
+    }
+
+    private static String getMasterCommitCode() {
+        return Utils.readContentsAsString(MASTER_POINTER);
     }
 
     private static Commit getCommitFromHash(String hashCode) {

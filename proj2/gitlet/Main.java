@@ -11,18 +11,30 @@ public class Main {
     public static void main(String[] args) {
         // TODO: what if args is empty?
         String firstArg = args[0];
-        switch(firstArg) {
-            case "init":
+        if (firstArg.equals("init")) {
                 if (args.length != 1) {
                     Utils.message("Incorrect operands.");
                     System.exit(0);
                 }
                 Repository.init();
-                break;
-            case "add":
-                // TODO: handle the `add [filename]` command
-                break;
-            // TODO: FILL THE REST IN
+        } else {
+            Repository.checkInit();
+            switch (firstArg) {
+                case "add" -> {
+                    if (args.length != 2) {
+                        Utils.message("Incorrect operands.");
+                        System.exit(0);
+                    }
+                    Repository.add(args[1]);
+                }
+                case "commit" -> {
+                    if (args.length != 2) {
+                        Utils.message("Please enter a commit message.");
+                        System.exit(0);
+                    }
+                    Repository.commit(args[1]);
+                }
+            }
         }
     }
 }

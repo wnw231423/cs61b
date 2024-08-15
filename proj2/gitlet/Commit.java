@@ -4,9 +4,8 @@ import jdk.jshell.execution.Util;
 
 import java.io.File;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.Objects;
+import java.util.TreeMap;
 
 /** Represents a gitlet commit object.
  *  TODO: It's a good idea to give a description here of what else this Class
@@ -28,9 +27,9 @@ public class Commit implements Serializable {
      */
     private String parent2Code;
     /** Hash codes of tracked files. */
-    private ArrayList<String> trackedFiles;
+    private TreeMap<String, String> trackedFiles;
 
-    public Commit(String parentCode, String message, ArrayList<String> trackedFiles) {
+    public Commit(String parentCode, String message, TreeMap<String, String> trackedFiles) {
         if (parentCode == null) {
             this.commitDate = new Date(0);
             this.parentCode = null;
@@ -41,8 +40,11 @@ public class Commit implements Serializable {
         this.message = message;
         this.trackedFiles = trackedFiles;
         restoreParent();
-        File thisCommit = Utils.join(Repository.COMMIT_DIR, getSha1());
-        Utils.writeObject(thisCommit, this);
+    }
+
+    public void doCommit() {
+        File f = Utils.join(Repository.COMMIT_DIR, getSha1());
+        Utils.writeObject(f, this);
     }
 
     public void restoreParent(){
@@ -55,6 +57,8 @@ public class Commit implements Serializable {
     }
 
     public String getSha1() {
-        return Utils.sha1(message, commitDate, parentCode, parent2Code, trackedFiles);
+        return Utils.sha1(Utils.serialize(this));
     }
+
+    public TreeMap<String, String> getTrackedFiles(){return this.trackedFiles;}
 }
