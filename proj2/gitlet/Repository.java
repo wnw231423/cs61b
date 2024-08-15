@@ -44,8 +44,8 @@ public class Repository {
         //initCommit
         Commit initCommit = new Commit(null, "initial commit", new TreeMap<>());
         initCommit.doCommit();
-        Utils.writeContents(HEAD_POINTER, initCommit.getSha1());
-        Utils.writeContents(MASTER_POINTER, initCommit.getSha1());
+        setHeadPointer(initCommit.getSha1());
+        setMasterPointer(initCommit.getSha1());
 
         //Create stage
         Stage stage = new Stage();
@@ -74,6 +74,18 @@ public class Repository {
         String currentCommitCode = getHeadCommitCode();
         Commit commit = new Commit(currentCommitCode, message, stage.getTrackedList());
         commit.doCommit();
+
+        setHeadPointer(commit.getSha1());
+        setMasterPointer(commit.getSha1());
+    }
+
+    public static void log() {
+        Commit m = getCommitFromHash(getHeadCommitCode());
+        while (!m.isInit()) {
+            System.out.println(m);
+            m = getCommitFromHash(m.getParentCode());
+        }
+        System.out.println(m);
     }
 
     private static String getHeadCommitCode() {
@@ -88,5 +100,13 @@ public class Repository {
         Commit res = Utils.readObject(Utils.join(COMMIT_DIR, hashCode), Commit.class);
         res.restoreParent();
         return res;
+    }
+
+    private static void setHeadPointer(String code) {
+        Utils.writeContents(HEAD_POINTER, code);
+    }
+
+    private static void setMasterPointer(String code) {
+        Utils.writeContents(MASTER_POINTER, code);
     }
 }

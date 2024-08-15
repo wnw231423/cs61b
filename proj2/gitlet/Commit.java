@@ -1,10 +1,10 @@
 package gitlet;
 
-import jdk.jshell.execution.Util;
-
 import java.io.File;
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.TreeMap;
 
 /** Represents a gitlet commit object.
@@ -39,6 +39,7 @@ public class Commit implements Serializable {
         }
         this.message = message;
         this.trackedFiles = trackedFiles;
+        this.parent2Code = null;
         restoreParent();
     }
 
@@ -56,9 +57,48 @@ public class Commit implements Serializable {
         }
     }
 
+    public String getParentCode() {
+        return parentCode;
+    }
+
     public String getSha1() {
         return Utils.sha1(Utils.serialize(this));
     }
 
     public TreeMap<String, String> getTrackedFiles(){return this.trackedFiles;}
+
+    public boolean isInit() {
+        return parentCode == null;
+    }
+
+    @Override
+    public String toString() {
+        String hashCode = getSha1();
+        SimpleDateFormat formatter = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy Z", Locale.ENGLISH);
+        String formattedDate = formatter.format(commitDate);
+        StringBuilder s = new StringBuilder();
+
+        s.append("===\n");
+
+        s.append("commit ");
+        s.append(hashCode);
+        s.append("\n");
+
+        if (parent2Code != null) {
+            s.append("merge: ");
+            s.append(parentCode, 0, 6);
+            s.append(" ");
+            s.append(parent2Code, 0, 6);
+            s.append("\n");
+        }
+
+        s.append("Date: ");
+        s.append(formattedDate);
+        s.append("\n");
+
+        s.append(message);
+        s.append("\n");
+
+        return s.toString();
+    }
 }

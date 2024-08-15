@@ -34,6 +34,13 @@ public class Main {
                     }
                     Repository.commit(args[1]);
                 }
+                case "log" -> {
+                    if (args.length != 1) {
+                        Utils.message("Incorrect operands");
+                        System.exit(0);
+                    }
+                    Repository.log();
+                }
             }
         }
     }
