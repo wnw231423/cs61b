@@ -2,11 +2,12 @@ package gitlet;
 
 import java.io.File;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
 
 /** Represents stage Object in gitlet.
- *  It can add or remove files. TODO: implement remove operation later.
+ *  It can add or remove files.
  */
 public class Stage implements Serializable {
     /** Tracked list from head commit. */
@@ -14,7 +15,7 @@ public class Stage implements Serializable {
     /** Add list */
     private TreeMap<String, String> addList;
     /** Remove list */
-    private TreeMap<String, String> removeList;
+    private ArrayList<String> removeList;
 
     /** Constructor, there should be only one stage instance so
      *  constructor will be called only once during init.
@@ -22,7 +23,7 @@ public class Stage implements Serializable {
     public Stage() {
         this.trackedList = new TreeMap<>();
         this.addList = new TreeMap<>();
-        this.removeList = new TreeMap<>();
+        this.removeList = new ArrayList<>();
     }
 
     /** Add operation */
@@ -45,6 +46,18 @@ public class Stage implements Serializable {
         updateStatus();
     }
 
+    /** Remove operation. Return false if neither the file is staged for addition nor it's tracked. */
+    public boolean rmFile(String fileName) {
+        if (!trackedList.containsKey(fileName) && !addList.containsKey(fileName)) {
+            return false;
+        } else if (addList.containsKey(fileName)) {
+            addList.remove(fileName);
+        } else {
+            removeList.add(fileName);
+        }
+        return true;
+    }
+
     /** Clear stage and ready to commit, this method should only be called during committing.
      * <p>
      *  In my implementation, the stage will always inherit tracked files from head commit,
@@ -61,7 +74,11 @@ public class Stage implements Serializable {
             }
             trackedList.putAll(addList);
             addList.clear();
-            //TODO: handle remove situation
+
+            for (String fn: removeList) {
+                trackedList.remove(fn);
+                Utils.restrictedDelete(Utils.join(Repository.CWD, fn));
+            }
             removeList.clear();
 
             updateStatus();

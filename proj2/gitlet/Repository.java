@@ -118,6 +118,14 @@ public class Repository {
         checkoutWithoutBranch(fileName, Repository.getHeadCommitCode());
     }
 
+    /** rm command. */
+    public static void rm(String fileName) {
+        Stage stage = Utils.readObject(STAGE, Stage.class);
+        if (!stage.rmFile(fileName)) {
+            mq("No reason to remove the file.");
+        }
+    }
+
     private static String getHeadCommitCode() {
         return Utils.readContentsAsString(HEAD_POINTER);
     }
@@ -138,5 +146,10 @@ public class Repository {
 
     private static void setMasterPointer(String code) {
         Utils.writeContents(MASTER_POINTER, code);
+    }
+
+    public static void mq(String m) {
+        Utils.message(m);
+        System.exit(0);
     }
 }
