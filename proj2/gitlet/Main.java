@@ -36,10 +36,35 @@ public class Main {
                 }
                 case "log" -> {
                     if (args.length != 1) {
-                        Utils.message("Incorrect operands");
+                        Utils.message("Incorrect operands.");
                         System.exit(0);
                     }
                     Repository.log();
+                }
+                case "checkout" -> {
+                    switch (args.length) {
+                        case 2 -> {
+                            //TODO: checkout [branch]
+                        }
+                        case 3 -> {
+                            if (!args[1].equals("--")) {
+                                Utils.message("Incorrect operands.");
+                                System.exit(0);
+                            }
+                            Repository.checkoutWithoutBranch(args[2]);
+                        }
+                        case 4 -> {
+                            if (!args[2].equals("--")) {
+                                Utils.message("Incorrect operands.");
+                                System.exit(0);
+                            }
+                            Repository.checkoutWithoutBranch(args[3], args[1]);
+                        }
+                        default -> {
+                            Utils.message("incorrect operands.");
+                            System.exit(0);
+                        }
+                    }
                 }
             }
         }

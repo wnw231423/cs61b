@@ -1,14 +1,15 @@
 package gitlet;
 
 import java.io.File;
-import java.util.Map;
 import java.util.TreeMap;
 
 import static gitlet.Utils.*;
 
 /** Represents a gitlet repository.
- *  TODO: It's a good idea to give a description here of what else this Class
- *  does at a high level.
+ *  Here are its utilities:
+ *  1. give access to corresponding file and directory include commits, branches, blobs, stage in .gitlet
+ *     as well as cwd.
+ *  2. serve as bridge between main and each explicit operation, call methods for commands that user inputs.
  *
  *  @author wnw231423
  */
@@ -28,8 +29,9 @@ public class Repository {
     /** The stage area */
     public static final File STAGE = join(GITLET_DIR, "stage");
     /** The Blobs directory. */
-    public static final File BLOBS_DIR = join(GITLET_DIR, "blobs");
+    public static final File BLOBS_DIR = join(GITLET_DIR, "blob");
 
+    /** To init a gitlet repo. */
     public static void init() {
         if (GITLET_DIR.exists()) {
             Utils.message("A Gitlet version-control system already exists in the current directory.");
@@ -59,11 +61,13 @@ public class Repository {
         }
     }
 
+    /** Stage a file */
     public static void add(String fileName) {
         Stage stage = Utils.readObject(STAGE, Stage.class);
         stage.addFile(fileName);
     }
 
+    /** Make a commit */
     public static void commit(String message) {
         Stage stage = Utils.readObject(STAGE, Stage.class);
         if (!stage.clearStage()) {
@@ -79,6 +83,7 @@ public class Repository {
         setMasterPointer(commit.getSha1());
     }
 
+    /** Show commit log. */
     public static void log() {
         Commit m = getCommitFromHash(getHeadCommitCode());
         while (!m.isInit()) {
@@ -86,6 +91,31 @@ public class Repository {
             m = getCommitFromHash(m.getParentCode());
         }
         System.out.println(m);
+    }
+
+    /** Checkout one file from head or one specific commit using hash code. */
+    public static void checkoutWithoutBranch(String fileName, String commitCode) {
+        File commitFile = Utils.join(COMMIT_DIR, commitCode);
+        if (!commitFile.exists()) {
+            Utils.message("No commit with that id exists.");
+            System.exit(0);
+        }
+
+        Commit commit = getCommitFromHash(commitCode);
+        String blobHash = commit.searchBlobHash(fileName);
+        if (blobHash == null) {
+            Utils.message("File does not exist in that commit.");
+            System.exit(0);
+        }
+
+        File blob = Utils.join(BLOBS_DIR, blobHash);
+        File cwdFile = Utils.join(CWD, fileName);
+        Utils.writeContents(cwdFile, Utils.readContents(blob));
+    }
+
+    /** Just Overload. */
+    public static void checkoutWithoutBranch(String fileName) {
+        checkoutWithoutBranch(fileName, Repository.getHeadCommitCode());
     }
 
     private static String getHeadCommitCode() {

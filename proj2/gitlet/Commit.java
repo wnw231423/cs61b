@@ -8,8 +8,7 @@ import java.util.Locale;
 import java.util.TreeMap;
 
 /** Represents a gitlet commit object.
- *  TODO: It's a good idea to give a description here of what else this Class
- *  does at a high level.
+ *  includes some operations about commit.
  *
  *  @author wnw231423
  */
@@ -29,6 +28,7 @@ public class Commit implements Serializable {
     /** Hash codes of tracked files. */
     private TreeMap<String, String> trackedFiles;
 
+    /** Constructor of commit. */
     public Commit(String parentCode, String message, TreeMap<String, String> trackedFiles) {
         if (parentCode == null) {
             this.commitDate = new Date(0);
@@ -43,11 +43,14 @@ public class Commit implements Serializable {
         restoreParent();
     }
 
+    /** make this commit persistent. */
     public void doCommit() {
         File f = Utils.join(Repository.COMMIT_DIR, getSha1());
         Utils.writeObject(f, this);
     }
 
+    /** Restore its parent commit pointer from deserialization,
+     * only be called by getCommitFromHash of Repository class. */
     public void restoreParent(){
         if (parentCode == null) {
             this.parent = null;
@@ -67,10 +70,17 @@ public class Commit implements Serializable {
 
     public TreeMap<String, String> getTrackedFiles(){return this.trackedFiles;}
 
+    /** Search the hash code of given file name. */
+    public String searchBlobHash(String fileName) {
+        return trackedFiles.get(fileName);
+    }
+
+    /** Check if this commit is initial commit. */
     public boolean isInit() {
         return parentCode == null;
     }
 
+    /** Override for log command. */
     @Override
     public String toString() {
         String hashCode = getSha1();

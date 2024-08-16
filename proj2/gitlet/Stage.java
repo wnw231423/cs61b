@@ -45,7 +45,11 @@ public class Stage implements Serializable {
         updateStatus();
     }
 
-    /** Clear stage and ready to commit, this method should only be called during committing. */
+    /** Clear stage and ready to commit, this method should only be called during committing.
+     * <p>
+     *  In my implementation, the stage will always inherit tracked files from head commit,
+     *  every time it clear stage for commit, it will combine tracked files and files in stage,
+     *  store it and return it for construct the next newly head commit. */
     public boolean clearStage() {
         if (addList.isEmpty() && removeList.isEmpty()) {
             return false;
@@ -69,6 +73,10 @@ public class Stage implements Serializable {
         return trackedList;
     }
 
+    /** Update status.
+     * <p>
+     * Write stage into STAGE file so that the status can be updated between add and commit.
+     */
     private void updateStatus() {
         Utils.writeObject(Repository.STAGE, this);
     }
