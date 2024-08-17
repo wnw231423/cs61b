@@ -55,6 +55,7 @@ public class Stage implements Serializable {
         } else {
             removeList.add(fileName);
         }
+        updateStatus();
         return true;
     }
 
