@@ -65,6 +65,18 @@ public class Main {
                     }
                     Repository.rm(args[1]);
                 }
+                case "global-log" -> {
+                    if (args.length != 1) {
+                        inOp();
+                    }
+                    Repository.globalLog();
+                }
+                case "status" -> {
+                    if (args.length != 1) {
+                        inOp();
+                    }
+                    Repository.status();
+                }
             }
         }
     }

@@ -23,11 +23,11 @@ Directory and file variables, they are all `public static final`:
    1. `CWD`, current working directory
    2. `GITLET_DIR`, our gitlet repo, includes following things:
       1. `STAGE`, stage file stores the stage information.
-      2. `COMMIT_DIR`, dir that saves commits.
-      3. `BRANCH_DIR`, dir that saves head and other branch pointer including master.
-         1. `HEAD_POINTER`, head pointer which store the hash code of head commit.
-         2. `MASTER_POINTER`, master pointer which store the hash code of master commit.
-      4. `BLOBS_DIR`, dir that saves file copies from cwd.
+      2. `HEAD_POINTER`, head pointer which store the hash code of head commit.
+      3. `COMMIT_DIR`, dir that saves commits.
+      4. `BRANCH_DIR`, dir that saves head and other branch pointer including master.
+         1. `MASTER_POINTER`, master pointer which store the hash code of master commit.
+      5. `BLOBS_DIR`, dir that saves file copies from cwd.
 
 
 ### Commit
@@ -68,14 +68,14 @@ The directory structure:
 ```
 CWD                             <==== Whatever the current working directory is
 └── .gitlet                     <==== All persistant data is stored within here
+    ├── head                    <==== Head pointer.
     ├── stage                   <==== Where the stage is stored (a file)
     ├── commit                  <==== All ccommits are stored in this directory
     │   ├── commit1             <==== A single commit instance stored to a file
     │   ├── commit2
     │   ├── ...
     │   └── commitN
-    ├── branch                  <==== All pointers are stored in this directory
-    │   ├── head 
+    ├── branch                  <==== All branches are stored in this directory 
     │   ├── master
     │   └── ...
     └── blob                    <==== All file copies are stored in this directory

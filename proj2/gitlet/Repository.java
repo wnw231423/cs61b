@@ -1,6 +1,7 @@
 package gitlet;
 
 import java.io.File;
+import java.util.List;
 import java.util.TreeMap;
 
 import static gitlet.Utils.*;
@@ -23,7 +24,7 @@ public class Repository {
     /** The branch directory, which contains the head, master and other possible pointer. */
     public static final File BRANCH_DIR = join(GITLET_DIR, "branch");
     /** The head pointer */
-    public static final File HEAD_POINTER = join(BRANCH_DIR, "head");
+    public static final File HEAD_POINTER = join(GITLET_DIR, "head");
     /** The master pointer */
     public static final File MASTER_POINTER = join(BRANCH_DIR, "master");
     /** The stage area */
@@ -126,6 +127,21 @@ public class Repository {
         }
     }
 
+    /** global-log command. */
+    public static void globalLog() {
+        List<String> commits = Utils.plainFilenamesIn(COMMIT_DIR);
+        for (String hash: commits) {
+            Commit m = getCommitFromHash(hash);
+            System.out.println(m);
+        }
+    }
+
+    /** status command. */
+    public static void status() {
+        Stage s = getStage();
+        System.out.println(s);
+    }
+
     private static String getHeadCommitCode() {
         return Utils.readContentsAsString(HEAD_POINTER);
     }
@@ -146,6 +162,10 @@ public class Repository {
 
     private static void setMasterPointer(String code) {
         Utils.writeContents(MASTER_POINTER, code);
+    }
+
+    private static Stage getStage() {
+        return Utils.readObject(STAGE, Stage.class);
     }
 
     public static void mq(String m) {

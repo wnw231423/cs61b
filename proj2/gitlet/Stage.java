@@ -3,6 +3,7 @@ package gitlet;
 import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -16,6 +17,8 @@ public class Stage implements Serializable {
     private TreeMap<String, String> addList;
     /** Remove list */
     private ArrayList<String> removeList;
+    /** Current branch. */
+    private String branch;
 
     /** Constructor, there should be only one stage instance so
      *  constructor will be called only once during init.
@@ -24,6 +27,7 @@ public class Stage implements Serializable {
         this.trackedList = new TreeMap<>();
         this.addList = new TreeMap<>();
         this.removeList = new ArrayList<>();
+        this.branch = "master";
     }
 
     /** Add operation */
@@ -50,10 +54,12 @@ public class Stage implements Serializable {
     public boolean rmFile(String fileName) {
         if (!trackedList.containsKey(fileName) && !addList.containsKey(fileName)) {
             return false;
-        } else if (addList.containsKey(fileName)) {
-            addList.remove(fileName);
-        } else {
+        }
+        addList.remove(fileName);
+        if (trackedList.containsKey(fileName)) {
             removeList.add(fileName);
+            trackedList.remove(fileName);
+            Utils.restrictedDelete(Utils.join(Repository.CWD, fileName));
         }
         updateStatus();
         return true;
@@ -76,10 +82,6 @@ public class Stage implements Serializable {
             trackedList.putAll(addList);
             addList.clear();
 
-            for (String fn: removeList) {
-                trackedList.remove(fn);
-                Utils.restrictedDelete(Utils.join(Repository.CWD, fn));
-            }
             removeList.clear();
 
             updateStatus();
@@ -97,5 +99,44 @@ public class Stage implements Serializable {
      */
     private void updateStatus() {
         Utils.writeObject(Repository.STAGE, this);
+    }
+
+    /** Override for status command. */
+    @Override
+    public String toString() {
+        StringBuilder s = new StringBuilder();
+
+        s.append("=== Branches ===\n");
+        List<String> branches = Utils.plainFilenamesIn(Repository.BRANCH_DIR);
+        for (String branch: branches) {
+            if (branch.equals(this.branch)) {
+                s.append("*");
+            }
+            s.append(branch);
+            s.append("\n");
+        }
+        s.append("\n");
+
+        s.append("=== Staged Files ===\n");
+        for (String fileName: addList.keySet()) {
+            s.append(fileName);
+            s.append("\n");
+        }
+        s.append("\n");
+
+        s.append("=== Removed Files ===\n");
+        for (String fileName: removeList) {
+            s.append(fileName);
+            s.append("\n");
+        }
+        s.append("\n");
+
+        s.append("=== Modifications Not Staged For Commit ===\n");
+        s.append("\n");
+
+        s.append("=== Untracked Files ===\n");
+        s.append("\n");
+
+        return s.toString();
     }
 }
