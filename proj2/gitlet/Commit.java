@@ -60,6 +60,16 @@ public class Commit implements Serializable {
         }
     }
 
+    /** Search the hash code of given file name. */
+    public String searchBlobHash(String fileName) {
+        return trackedFiles.get(fileName);
+    }
+
+    /** Check if this commit is initial commit. */
+    public boolean isInit() {
+        return parentCode == null;
+    }
+
     public String getParentCode() {
         return parentCode;
     }
@@ -70,14 +80,8 @@ public class Commit implements Serializable {
 
     public TreeMap<String, String> getTrackedFiles(){return this.trackedFiles;}
 
-    /** Search the hash code of given file name. */
-    public String searchBlobHash(String fileName) {
-        return trackedFiles.get(fileName);
-    }
-
-    /** Check if this commit is initial commit. */
-    public boolean isInit() {
-        return parentCode == null;
+    public String getMessage() {
+        return message;
     }
 
     /** Override for log command. */

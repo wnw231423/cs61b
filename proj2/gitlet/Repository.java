@@ -96,13 +96,12 @@ public class Repository {
 
     /** Checkout one file from head or one specific commit using hash code. */
     public static void checkoutWithoutBranch(String fileName, String commitCode) {
-        File commitFile = Utils.join(COMMIT_DIR, commitCode);
-        if (!commitFile.exists()) {
+        Commit commit = getCommitFromHash(commitCode);
+        if (commit == null) {
             Utils.message("No commit with that id exists.");
             System.exit(0);
         }
 
-        Commit commit = getCommitFromHash(commitCode);
         String blobHash = commit.searchBlobHash(fileName);
         if (blobHash == null) {
             Utils.message("File does not exist in that commit.");
@@ -142,6 +141,24 @@ public class Repository {
         System.out.println(s);
     }
 
+    /** find command. */
+    public static void find(String message) {
+        List<String> commits = Utils.plainFilenamesIn(COMMIT_DIR);
+        boolean found = false;
+        for (String uid: commits) {
+            Commit commit = getCommitFromHash(uid);
+            if (commit.getMessage().equals(message)) {
+                System.out.println(uid);
+                found = true;
+            }
+        }
+        if (!found) {
+            Utils.message("Found no commit with that message.");
+        }
+    }
+
+
+    /* Helper functions. */
     private static String getHeadCommitCode() {
         return Utils.readContentsAsString(HEAD_POINTER);
     }
@@ -151,9 +168,19 @@ public class Repository {
     }
 
     private static Commit getCommitFromHash(String hashCode) {
-        Commit res = Utils.readObject(Utils.join(COMMIT_DIR, hashCode), Commit.class);
-        res.restoreParent();
-        return res;
+        if (hashCode.length() == UID_LENGTH) {
+            Commit res = Utils.readObject(Utils.join(COMMIT_DIR, hashCode), Commit.class);
+            res.restoreParent();
+            return res;
+        } else {
+            List<String> commits = Utils.plainFilenamesIn(COMMIT_DIR);
+            for (String code: commits) {
+                if (code.startsWith(hashCode)) {
+                    return getCommitFromHash(code);
+                }
+            }
+            return null;
+        }
     }
 
     private static void setHeadPointer(String code) {

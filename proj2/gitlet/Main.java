@@ -77,6 +77,12 @@ public class Main {
                     }
                     Repository.status();
                 }
+                case "find" -> {
+                    if (args.length != 2) {
+                        inOp();
+                    }
+                    Repository.find(args[1]);
+                }
             }
         }
     }
