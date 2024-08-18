@@ -40,7 +40,7 @@ public class Main {
                 case "checkout" -> {
                     switch (args.length) {
                         case 2 -> {
-                            //TODO: checkout [branch]
+                            Repository.checkoutWithBranch(args[1]);
                         }
                         case 3 -> {
                             if (!args[1].equals("--")) {

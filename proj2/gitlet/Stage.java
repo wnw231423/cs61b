@@ -89,8 +89,20 @@ public class Stage implements Serializable {
         }
     }
 
+    public void clearStageWithBranchChange(String branch, TreeMap<String, String> tf) {
+        this.branch = branch;
+        this.trackedList = tf;
+        this.addList.clear();
+        this.removeList.clear();
+        updateStatus();
+    }
+
     public TreeMap<String, String> getTrackedList() {
         return trackedList;
+    }
+
+    public String getBranch() {
+        return branch;
     }
 
     /** Update status.

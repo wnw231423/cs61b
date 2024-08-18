@@ -2,6 +2,7 @@ package gitlet;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 
 import static gitlet.Utils.*;
@@ -155,6 +156,45 @@ public class Repository {
         if (!found) {
             Utils.message("Found no commit with that message.");
         }
+    }
+
+    /** checkout [branch] */
+    public static void checkoutWithBranch(String branch) {
+        File f = Utils.join(BRANCH_DIR, branch);
+        if (!f.exists()) {
+            mq("No such branch exists.");
+        }
+
+        Stage stage = getStage();
+        //check if no need to checkout branch.
+        if (branch.equals(stage.getBranch())) {
+            mq("No need to checkout the current branch.");
+        }
+
+        //check if there exists untracked file.
+        Commit currentCommit = getCommitFromHash(getHeadCommitCode());
+        TreeMap<String, String> trackedFiles = currentCommit.getTrackedFiles();
+        List<String> workingFiles = Utils.plainFilenamesIn(CWD);
+        for (String workingFile: workingFiles) {
+            if (!trackedFiles.containsKey(workingFile)) {
+                mq("There is an untracked file in the way; delete it, or add and commit it first.");
+            }
+        }
+
+        //do checkout operation.
+        for (String workingFile: workingFiles) {
+            restrictedDelete(workingFile);
+        }
+        String targetHashCode = Utils.readContentsAsString(f);
+        Commit targetCommit = getCommitFromHash(targetHashCode);
+        TreeMap<String, String> targetTrackedFiles = targetCommit.getTrackedFiles();
+        for (Map.Entry<String, String> e: targetTrackedFiles.entrySet()) {
+            File temp = Utils.join(CWD, e.getKey());
+            File blob = Utils.join(BLOBS_DIR, e.getValue());
+            Utils.writeContents(temp, Utils.readContents(blob));
+        }
+        stage.clearStageWithBranchChange(branch, targetTrackedFiles);
+        setHeadPointer(targetHashCode);
     }
 
 
