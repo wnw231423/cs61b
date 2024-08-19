@@ -171,6 +171,47 @@ public class Repository {
             mq("No need to checkout the current branch.");
         }
 
+        String targetHashCode = Utils.readContentsAsString(f);
+        validateCheckout(branch, targetHashCode);
+    }
+
+    /** branch command. */
+    public static void addBranch(String branchName) {
+        File branchFile = Utils.join(BRANCH_DIR, branchName);
+        Utils.writeContents(branchFile, getHeadCommitCode());
+    }
+
+    /** rm-branch command. */
+    public static void rmBranch(String branchName) {
+        File f = Utils.join(BRANCH_DIR, branchName);
+        if (!f.exists()) {
+            mq("A branch with that name does not exist.");
+        }
+        if (f.equals(getStage().getBranch())) {
+            mq("Cannot remove the current branch.");
+        }
+        f.delete();
+    }
+
+    public static void reset(String id) {
+        File f = Utils.join(COMMIT_DIR, id);
+        if (!f.exists()) {
+            mq("No commit with that id exists.");
+        }
+        String branch = getStage().getBranch();
+        validateCheckout(branch, id);
+        setHeadPointer(id);
+        setBranchPointer(branch, id);
+    }
+
+
+    /* Helper functions. */
+
+    /** This method check if a working file is untracked in the
+     *  current branch and would be overwritten. Then check to
+     *  the commit of given id.
+     */
+    private static void validateCheckout(String branch, String id) {
         //check if there exists untracked file.
         Commit currentCommit = getCommitFromHash(getHeadCommitCode());
         TreeMap<String, String> trackedFiles = currentCommit.getTrackedFiles();
@@ -185,7 +226,7 @@ public class Repository {
         for (String workingFile: workingFiles) {
             restrictedDelete(workingFile);
         }
-        String targetHashCode = Utils.readContentsAsString(f);
+        String targetHashCode = id;
         Commit targetCommit = getCommitFromHash(targetHashCode);
         TreeMap<String, String> targetTrackedFiles = targetCommit.getTrackedFiles();
         for (Map.Entry<String, String> e: targetTrackedFiles.entrySet()) {
@@ -193,18 +234,10 @@ public class Repository {
             File blob = Utils.join(BLOBS_DIR, e.getValue());
             Utils.writeContents(temp, Utils.readContents(blob));
         }
-        stage.clearStageWithBranchChange(branch, targetTrackedFiles);
+        getStage().clearStageWithBranchChange(branch, targetTrackedFiles);
         setHeadPointer(targetHashCode);
     }
 
-    /** branch command. */
-    public static void addBranch(String branchName) {
-        File branchFile = Utils.join(BRANCH_DIR, branchName);
-        Utils.writeContents(branchFile, getHeadCommitCode());
-    }
-
-
-    /* Helper functions. */
     private static String getBranchPointerCode(String branchName) {
         return Utils.readContentsAsString(Utils.join(BRANCH_DIR, branchName));
     }
@@ -237,8 +270,12 @@ public class Repository {
         Utils.writeContents(HEAD_POINTER, code);
     }
 
+    private static void setBranchPointer(String branch, String code) {
+        Utils.writeContents(Utils.join(BRANCH_DIR, branch), code);
+    }
+
     private static void setMasterPointer(String code) {
-        Utils.writeContents(MASTER_POINTER, code);
+        setBranchPointer("master", code);
     }
 
     private static Stage getStage() {

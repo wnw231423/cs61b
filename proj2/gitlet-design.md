@@ -62,7 +62,10 @@ commits. There is only one stage instance and it's serialized in the stage file.
    store it and return it for construct the next newly head commit. In this way, during `add` command,
    it only looks into the stage and compare if add command validate, no need to go to commit obj.
 
-
+2. For `checkout [branch]` command, I do the following things:
+   1. Command validation check.
+   2. Change the instance variables of stage, including branch and tracked files.
+   3. Change the head pointer.
 
 ## Persistence
 The directory structure:
@@ -101,3 +104,6 @@ When `commit` command is used, we do the following thing:
    update and serialize stage into file, return the ultimate file tracked list for the new commit.
    It also copies the new files into `blob` dir.
 3. Construct the new commit using the TreeMap above and serialize it into `commit` dir.
+
+When `branch` command is used, we do the following thing:
+1. Create the new branch file in `branch` dir and write the hash code of current commit.

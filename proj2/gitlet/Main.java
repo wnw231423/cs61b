@@ -9,7 +9,6 @@ public class Main {
      *  <COMMAND> <OPERAND1> <OPERAND2> ... 
      */
     public static void main(String[] args) {
-        // TODO: what if args is empty?
         String firstArg = args[0];
         if (firstArg.equals("init")) {
                 if (args.length != 1) {
@@ -88,6 +87,18 @@ public class Main {
                         inOp();
                     }
                     Repository.addBranch(args[1]);
+                }
+                case "rm-branch" -> {
+                    if (args.length != 2) {
+                        inOp();
+                    }
+                    Repository.rmBranch(args[1]);
+                }
+                case "reset" -> {
+                    if (args.length != 2) {
+                        inOp();
+                    }
+                    Repository.reset(args[1]);
                 }
             }
         }
