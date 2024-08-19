@@ -197,14 +197,24 @@ public class Repository {
         setHeadPointer(targetHashCode);
     }
 
+    /** branch command. */
+    public static void addBranch(String branchName) {
+        File branchFile = Utils.join(BRANCH_DIR, branchName);
+        Utils.writeContents(branchFile, getHeadCommitCode());
+    }
+
 
     /* Helper functions. */
+    private static String getBranchPointerCode(String branchName) {
+        return Utils.readContentsAsString(Utils.join(BRANCH_DIR, branchName));
+    }
+
     private static String getHeadCommitCode() {
         return Utils.readContentsAsString(HEAD_POINTER);
     }
 
     private static String getMasterCommitCode() {
-        return Utils.readContentsAsString(MASTER_POINTER);
+        return getBranchPointerCode("master");
     }
 
     private static Commit getCommitFromHash(String hashCode) {

@@ -83,6 +83,12 @@ public class Main {
                     }
                     Repository.find(args[1]);
                 }
+                case "branch" -> {
+                    if (args.length != 2) {
+                        inOp();
+                    }
+                    Repository.addBranch(args[1]);
+                }
             }
         }
     }

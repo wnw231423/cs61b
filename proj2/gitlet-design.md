@@ -51,7 +51,8 @@ commits. There is only one stage instance and it's serialized in the stage file.
 #### Fields
 1. `private TreeMap<String, String> trackedList`, tracked files map which is inherited from head commit.
 2. `private TreeMap<String, String> addList`, map for `add` command.
-3. `private TreeMap<String, String> removeList`, map for `rm` command. //TODO
+3. `private TreeMap<String, String> removeList`, map for `rm` command.
+4. `private String branch`, current branch.
 
 
 
