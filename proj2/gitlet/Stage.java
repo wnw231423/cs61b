@@ -77,7 +77,9 @@ public class Stage implements Serializable {
             for (Map.Entry<String, String> e:addList.entrySet()) {
                 File source = Utils.join(Repository.CWD, e.getKey());
                 File blob = Utils.join(Repository.BLOBS_DIR, e.getValue());
-                Utils.writeContents(blob, Utils.readContents(source));
+                if (!blob.exists()) {
+                    Utils.writeContents(blob, Utils.readContents(source));
+                }
             }
             trackedList.putAll(addList);
             addList.clear();
@@ -105,6 +107,14 @@ public class Stage implements Serializable {
         return branch;
     }
 
+    public ArrayList<String> getRemoveList() {
+        return removeList;
+    }
+
+    public TreeMap<String, String> getAddList() {
+        return addList;
+    }
+
     /** Update status.
      * <p>
      * Write stage into STAGE file so that the status can be updated between add and commit.
@@ -120,12 +130,14 @@ public class Stage implements Serializable {
 
         s.append("=== Branches ===\n");
         List<String> branches = Utils.plainFilenamesIn(Repository.BRANCH_DIR);
+        s.append("*");
+        s.append(this.branch);
+        s.append("\n");
         for (String branch: branches) {
-            if (branch.equals(this.branch)) {
-                s.append("*");
+            if (!branch.equals(this.branch)) {
+                s.append(branch);
+                s.append("\n");
             }
-            s.append(branch);
-            s.append("\n");
         }
         s.append("\n");
 

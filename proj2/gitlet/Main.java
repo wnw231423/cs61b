@@ -100,6 +100,12 @@ public class Main {
                     }
                     Repository.reset(args[1]);
                 }
+                case "merge" -> {
+                    if (args.length != 2) {
+                        inOp();
+                    }
+                    Repository.merge(args[1]);
+                }
             }
         }
     }

@@ -43,6 +43,11 @@ public class Commit implements Serializable {
         restoreParent();
     }
 
+    public Commit(String parentCode, String parent2Code, String message, TreeMap<String, String> trackedFiles) {
+        this(parentCode, message, trackedFiles);
+        this.parent2Code = parent2Code;
+    }
+
     /** make this commit persistent. */
     public void doCommit() {
         File f = Utils.join(Repository.COMMIT_DIR, getSha1());
@@ -82,6 +87,12 @@ public class Commit implements Serializable {
 
     public String getMessage() {
         return message;
+    }
+
+    public void checkOutFile(String f) {
+        File blob = Utils.join(Repository.BLOBS_DIR, trackedFiles.get(f));
+        File target = Utils.join(Repository.CWD, f);
+        Utils.writeContents(target, Utils.readContents(blob));
     }
 
     /** Override for log command. */

@@ -1,9 +1,8 @@
 package gitlet;
 
 import java.io.File;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.lang.reflect.Array;
+import java.util.*;
 
 import static gitlet.Utils.*;
 
@@ -70,7 +69,7 @@ public class Repository {
     }
 
     /** Make a commit */
-    public static void commit(String message) {
+    public static void commit(String message, String parent2Code) {
         Stage stage = Utils.readObject(STAGE, Stage.class);
         if (!stage.clearStage()) {
             Utils.message("No changes added to the commit.");
@@ -78,11 +77,15 @@ public class Repository {
         }
 
         String currentCommitCode = getHeadCommitCode();
-        Commit commit = new Commit(currentCommitCode, message, stage.getTrackedList());
+        Commit commit = new Commit(currentCommitCode, parent2Code, message, stage.getTrackedList());
         commit.doCommit();
 
         setHeadPointer(commit.getSha1());
-        setMasterPointer(commit.getSha1());
+        setBranchPointer(stage.getBranch(), commit.getSha1());
+    }
+
+    public static void commit(String message) {
+        commit(message, null);
     }
 
     /** Show commit log. */
@@ -173,6 +176,8 @@ public class Repository {
 
         String targetHashCode = Utils.readContentsAsString(f);
         validateCheckout(branch, targetHashCode);
+
+        setHeadPointer(targetHashCode);
     }
 
     /** branch command. */
@@ -200,8 +205,76 @@ public class Repository {
         }
         String branch = getStage().getBranch();
         validateCheckout(branch, id);
-        setHeadPointer(id);
-        setBranchPointer(branch, id);
+    }
+
+    public static void merge(String branch) {
+        Stage stage = getStage();
+        if (!stage.getAddList().isEmpty() || !stage.getRemoveList().isEmpty()) {
+            mq("You have uncommitted changes.");
+        }
+        File targetBranchFile = Utils.join(BRANCH_DIR, branch);
+        if (!targetBranchFile.exists()) {
+            mq("A branch with that name does not exist.");
+        }
+        String currentBranch = stage.getBranch();
+        if (branch.equals(currentBranch)) {
+            mq("Cannot merge a branch with itself.");
+        }
+        String targetCommitHash = Utils.readContentsAsString(targetBranchFile);
+        String currentCommitHash = Utils.readContentsAsString(HEAD_POINTER);
+        String splitCommitHash = getSplitPoint(currentCommitHash, targetCommitHash);
+        if (splitCommitHash.equals(targetCommitHash)) {
+            mq("Given branch is an ancestor of the current branch.");
+        }
+        if (splitCommitHash.equals(currentCommitHash)) {
+            checkoutWithBranch(branch);
+            mq("Current branch fast-forwarded.");
+        }
+
+        Commit currentCommit = getCommitFromHash(currentCommitHash);
+        Commit splitCommit = getCommitFromHash(splitCommitHash);
+        Commit targetCommit = getCommitFromHash(targetCommitHash);
+
+        TreeMap<String, String> currentTrackedList = stage.getTrackedList();
+        TreeMap<String, String> splitTrackedList = splitCommit.getTrackedFiles();
+        TreeMap<String, String> targetTrackedList = targetCommit.getTrackedFiles();
+
+        TreeSet<String> allFiles = new TreeSet<>();
+        allFiles.addAll(currentTrackedList.keySet());
+        allFiles.addAll(targetTrackedList.keySet());
+
+        boolean conflicted = false;
+        for (String file:allFiles) {
+            boolean inSplit = splitTrackedList.containsKey(file);
+            boolean inOther = targetTrackedList.containsKey(file);
+            boolean inHead = currentTrackedList.containsKey(file);
+            boolean modifiedHead = (!inSplit && inHead) || (inSplit && !inHead) || (inSplit&&inHead&&
+                    !currentTrackedList.get(file).equals(splitTrackedList.get(file)));
+            boolean modifiedOther = (!inSplit && inOther) || (inSplit && !inOther) || (inSplit&&inOther&&
+                    !targetTrackedList.get(file).equals(splitTrackedList.get(file)));
+
+            if (modifiedOther && !modifiedHead) {
+                if (inSplit&&!inOther) {
+                    stage.rmFile(file);
+                } else {
+                    targetCommit.checkOutFile(file);
+                    stage.addFile(file);
+                }
+            } else {
+                if (!currentTrackedList.get(file).equals(targetTrackedList.get(file))) {
+                    //conflict
+                    File head = Utils.join(BLOBS_DIR, currentTrackedList.get(file));
+                    File other = Utils.join(BLOBS_DIR, targetTrackedList.get(file));
+                    Utils.writeContents(Utils.join(CWD, file), "<<<<<<< HEAD\n", Utils.readContents(head),
+                            "=======\n", Utils.readContents(other), ">>>>>>>");
+                    conflicted = true;
+                }
+            }
+        }
+        commit("Merged "+branch+" into "+stage.getBranch()+".");
+        if (conflicted) {
+            System.out.println("Encountered a merge conflict.");
+        }
     }
 
 
@@ -236,6 +309,32 @@ public class Repository {
         }
         getStage().clearStageWithBranchChange(branch, targetTrackedFiles);
         setHeadPointer(targetHashCode);
+    }
+
+    private static String getSplitPoint(String hash1, String hash2) {
+        Commit c1 = getCommitFromHash(hash1);
+        Commit c2 = getCommitFromHash(hash2);
+        ArrayList<String> c1Ancestor = getAncestors(c1);
+        ArrayList<String> c2Ancestor = getAncestors(c2);
+        int x = 0;
+        while (x < c1Ancestor.size() && x < c2Ancestor.size()) {
+            if (!c1Ancestor.get(x).equals(c2Ancestor.get(x))) {
+                return c1Ancestor.get(x-1);
+            } else {
+                x += 1;
+            }
+        }
+        return c1Ancestor.get(x-1);
+    }
+
+    private static ArrayList<String> getAncestors(Commit c) {
+        ArrayList<String> res = new ArrayList<>();
+        res.add(c.getSha1());
+        while (!c.isInit()) {
+            res.add(0, c.getParentCode());
+            c = getCommitFromHash(c.getParentCode());
+        }
+        return res;
     }
 
     private static String getBranchPointerCode(String branchName) {
