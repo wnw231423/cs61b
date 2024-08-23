@@ -37,15 +37,18 @@ public class Stage implements Serializable {
             System.out.println("File doesn't exist.");
             System.exit(0);
         }
-        removeList.remove(fileName);
-        String cwdCode = Utils.sha1(Utils.readContents(f));
-        if (!trackedList.containsKey(fileName)) {
-            addList.put(fileName, cwdCode);
+        if (removeList.contains(fileName)) {
+            removeList.remove(fileName);
         } else {
-            if (trackedList.get(fileName).equals(cwdCode)) {
-                addList.remove(fileName);
-            } else {
+            String cwdCode = Utils.sha1(Utils.readContents(f));
+            if (!trackedList.containsKey(fileName)) {
                 addList.put(fileName, cwdCode);
+            } else {
+                if (trackedList.get(fileName).equals(cwdCode)) {
+                    addList.remove(fileName);
+                } else {
+                    addList.put(fileName, cwdCode);
+                }
             }
         }
         updateStatus();

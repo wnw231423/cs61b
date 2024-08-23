@@ -1,5 +1,7 @@
 package gitlet;
 
+import com.sun.source.tree.Tree;
+
 import java.io.File;
 import java.util.*;
 
@@ -35,7 +37,8 @@ public class Repository {
     /** To init a gitlet repo. */
     public static void init() {
         if (GITLET_DIR.exists()) {
-            Utils.message("A Gitlet version-control system already exists in the current directory.");
+            Utils.message("A Gitlet version-control system already exists " +
+                    "in the current directory.");
             System.exit(0);
         }
 
@@ -254,12 +257,12 @@ public class Repository {
             boolean inSplit = splitTrackedList.containsKey(file);
             boolean inOther = targetTrackedList.containsKey(file);
             boolean inHead = currentTrackedList.containsKey(file);
-            boolean modifiedHead = (!inSplit && inHead) || (inSplit && !inHead) ||
-                    (inSplit&&inHead &&
-                            !currentTrackedList.get(file).equals(splitTrackedList.get(file)));
-            boolean modifiedOther = (!inSplit && inOther) || (inSplit && !inOther) ||
-                    (inSplit&&inOther &&
-                    !targetTrackedList.get(file).equals(splitTrackedList.get(file)));
+            boolean modifiedHead = (!inSplit && inHead) || (inSplit && !inHead)
+                    || (inSplit && inHead
+                    && !currentTrackedList.get(file).equals(splitTrackedList.get(file)));
+            boolean modifiedOther = (!inSplit && inOther) || (inSplit && !inOther)
+                    || (inSplit && inOther
+                    && !targetTrackedList.get(file).equals(splitTrackedList.get(file)));
 
             if (modifiedOther && !modifiedHead) {
                 if (inSplit && !inOther) {
@@ -272,8 +275,8 @@ public class Repository {
                 if (!inHead && inOther) {
                     targetCommit.checkOutFile(file);
                     stage.addFile(file);
-                } else if (inHead && inOther &&
-                        !currentTrackedList.get(file).equals(targetTrackedList.get(file))) {
+                } else if (inHead && inOther
+                        && !currentTrackedList.get(file).equals(targetTrackedList.get(file))) {
                     //conflict
                     File head = Utils.join(BLOBS_DIR, currentTrackedList.get(file));
                     File other = Utils.join(BLOBS_DIR, targetTrackedList.get(file));
@@ -298,16 +301,22 @@ public class Repository {
      *  the commit of given id.
      */
     private static void validateCheckout(String branch, String id) {
-        //check if there exists untracked file that would be overwritten.
+        //check if there exists current untracked file that would be overwritten.
+        //Delete the file that given commit is not tracking.
         String targetHashCode = id;
         Commit targetCommit = getCommitFromHash(targetHashCode);
         TreeMap<String, String> targetTrackedFiles = targetCommit.getTrackedFiles();
+        TreeMap<String, String> currentTrackedFiles = getStage().getTrackedList();
         List<String> workingFiles = Utils.plainFilenamesIn(CWD);
         for (String workingFile: workingFiles) {
             String workingHash = Utils.sha1(readContents(Utils.join(CWD, workingFile)));
-            if (targetTrackedFiles.containsKey(workingFile) &&
-                    targetTrackedFiles.get(workingFile).equals(workingHash)) {
+            if (!currentTrackedFiles.containsKey(workingFile) &&
+                    targetTrackedFiles.containsKey(workingFile) &&
+                    !targetTrackedFiles.get(workingFile).equals(workingHash)) {
                 mq("There is an untracked file in the way; delete it, or add and commit it first.");
+            }
+            if (!targetTrackedFiles.containsKey(workingFile)) {
+                Utils.restrictedDelete(Utils.join(CWD, workingFile));
             }
         }
 
