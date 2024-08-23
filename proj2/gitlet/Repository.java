@@ -1,7 +1,5 @@
 package gitlet;
 
-import com.sun.source.tree.Tree;
-
 import java.io.File;
 import java.util.*;
 
@@ -37,8 +35,8 @@ public class Repository {
     /** To init a gitlet repo. */
     public static void init() {
         if (GITLET_DIR.exists()) {
-            Utils.message("A Gitlet version-control system already exists " +
-                    "in the current directory.");
+            Utils.message("A Gitlet version-control system already exists "
+                    + "in the current directory.");
             System.exit(0);
         }
 
@@ -61,7 +59,7 @@ public class Repository {
     /** Check if there exists .gitlet dir so that other commands works. */
     public static void checkInit() {
         if (!GITLET_DIR.exists()) {
-            System.exit(0);
+            mq("Not in an initialized Gitlet directory.");
         }
     }
 
@@ -174,16 +172,13 @@ public class Repository {
             mq("No such branch exists.");
         }
 
-        Stage stage = getStage();
         //check if no need to checkout branch.
-        if (branch.equals(stage.getBranch())) {
+        if (branch.equals(getStage().getBranch())) {
             mq("No need to checkout the current branch.");
         }
 
         String targetHashCode = Utils.readContentsAsString(f);
         validateCheckout(branch, targetHashCode);
-
-        setHeadPointer(targetHashCode);
     }
 
     /** branch command. */
@@ -214,6 +209,7 @@ public class Repository {
         }
         String branch = getStage().getBranch();
         validateCheckout(branch, id);
+        setBranchPointer(getStage().getBranch(), id);
     }
 
     public static void merge(String branch) {
@@ -271,11 +267,8 @@ public class Repository {
                     targetCommit.checkOutFile(file);
                     stage.addFile(file);
                 }
-            } else {
-                if (!inHead && inOther) {
-                    targetCommit.checkOutFile(file);
-                    stage.addFile(file);
-                } else if (inHead && inOther
+            } else if (modifiedOther) {
+                if (inHead && inOther
                         && !currentTrackedList.get(file).equals(targetTrackedList.get(file))) {
                     //conflict
                     File head = Utils.join(BLOBS_DIR, currentTrackedList.get(file));
@@ -283,6 +276,16 @@ public class Repository {
                     Utils.writeContents(Utils.join(CWD, file), "<<<<<<< HEAD\n",
                             Utils.readContents(head), "=======\n", Utils.readContents(other),
                             ">>>>>>>");
+                    conflicted = true;
+                } else if (inHead && !inOther) {
+                    File head = Utils.join(BLOBS_DIR, currentTrackedList.get(file));
+                    Utils.writeContents(Utils.join(CWD, file), "<<<<<<< HEAD\n",
+                            Utils.readContents(head), "=======\n", ">>>>>>>");
+                    conflicted = true;
+                } else if (!inHead && inOther) {
+                    File other = Utils.join(BLOBS_DIR, targetTrackedList.get(file));
+                    Utils.writeContents(Utils.join(CWD, file), "<<<<<<< HEAD\n",
+                            "=======\n", Utils.readContents(other), ">>>>>>>");
                     conflicted = true;
                 }
             }
@@ -310,9 +313,9 @@ public class Repository {
         List<String> workingFiles = Utils.plainFilenamesIn(CWD);
         for (String workingFile: workingFiles) {
             String workingHash = Utils.sha1(readContents(Utils.join(CWD, workingFile)));
-            if (!currentTrackedFiles.containsKey(workingFile) &&
-                    targetTrackedFiles.containsKey(workingFile) &&
-                    !targetTrackedFiles.get(workingFile).equals(workingHash)) {
+            if (!currentTrackedFiles.containsKey(workingFile)
+                    && targetTrackedFiles.containsKey(workingFile)
+                    && !targetTrackedFiles.get(workingFile).equals(workingHash)) {
                 mq("There is an untracked file in the way; delete it, or add and commit it first.");
             }
             if (!targetTrackedFiles.containsKey(workingFile)) {
