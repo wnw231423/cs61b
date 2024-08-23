@@ -1,16 +1,16 @@
 package gitlet;
 
 import java.io.File;
-import java.lang.reflect.Array;
 import java.util.*;
 
 import static gitlet.Utils.*;
 
 /** Represents a gitlet repository.
  *  Here are its utilities:
- *  1. give access to corresponding file and directory include commits, branches, blobs, stage in .gitlet
- *     as well as cwd.
- *  2. serve as bridge between main and each explicit operation, call methods for commands that user inputs.
+ *  1. give access to corresponding file and directory include commits, branches, blobs, stage
+ *     in .gitlet as well as cwd.
+ *  2. serve as bridge between main and each explicit operation, call methods for commands that
+ *     user inputs.
  *
  *  @author wnw231423
  */
@@ -70,6 +70,9 @@ public class Repository {
 
     /** Make a commit */
     public static void commit(String message, String parent2Code) {
+        if (message.isEmpty()) {
+            mq("Please enter a commit message.");
+        }
         Stage stage = Utils.readObject(STAGE, Stage.class);
         if (!stage.clearStage()) {
             Utils.message("No changes added to the commit.");
@@ -183,6 +186,9 @@ public class Repository {
     /** branch command. */
     public static void addBranch(String branchName) {
         File branchFile = Utils.join(BRANCH_DIR, branchName);
+        if (branchFile.exists()) {
+            mq("A branch with that name already exists.");
+        }
         Utils.writeContents(branchFile, getHeadCommitCode());
     }
 
@@ -192,7 +198,7 @@ public class Repository {
         if (!f.exists()) {
             mq("A branch with that name does not exist.");
         }
-        if (f.equals(getStage().getBranch())) {
+        if (branchName.equals(getStage().getBranch())) {
             mq("Cannot remove the current branch.");
         }
         f.delete();
@@ -248,30 +254,37 @@ public class Repository {
             boolean inSplit = splitTrackedList.containsKey(file);
             boolean inOther = targetTrackedList.containsKey(file);
             boolean inHead = currentTrackedList.containsKey(file);
-            boolean modifiedHead = (!inSplit && inHead) || (inSplit && !inHead) || (inSplit&&inHead&&
-                    !currentTrackedList.get(file).equals(splitTrackedList.get(file)));
-            boolean modifiedOther = (!inSplit && inOther) || (inSplit && !inOther) || (inSplit&&inOther&&
+            boolean modifiedHead = (!inSplit && inHead) || (inSplit && !inHead) ||
+                    (inSplit&&inHead &&
+                            !currentTrackedList.get(file).equals(splitTrackedList.get(file)));
+            boolean modifiedOther = (!inSplit && inOther) || (inSplit && !inOther) ||
+                    (inSplit&&inOther &&
                     !targetTrackedList.get(file).equals(splitTrackedList.get(file)));
 
             if (modifiedOther && !modifiedHead) {
-                if (inSplit&&!inOther) {
+                if (inSplit && !inOther) {
                     stage.rmFile(file);
                 } else {
                     targetCommit.checkOutFile(file);
                     stage.addFile(file);
                 }
             } else {
-                if (!currentTrackedList.get(file).equals(targetTrackedList.get(file))) {
+                if (!inHead && inOther) {
+                    targetCommit.checkOutFile(file);
+                    stage.addFile(file);
+                } else if (inHead && inOther &&
+                        !currentTrackedList.get(file).equals(targetTrackedList.get(file))) {
                     //conflict
                     File head = Utils.join(BLOBS_DIR, currentTrackedList.get(file));
                     File other = Utils.join(BLOBS_DIR, targetTrackedList.get(file));
-                    Utils.writeContents(Utils.join(CWD, file), "<<<<<<< HEAD\n", Utils.readContents(head),
-                            "=======\n", Utils.readContents(other), ">>>>>>>");
+                    Utils.writeContents(Utils.join(CWD, file), "<<<<<<< HEAD\n",
+                            Utils.readContents(head), "=======\n", Utils.readContents(other),
+                            ">>>>>>>");
                     conflicted = true;
                 }
             }
         }
-        commit("Merged "+branch+" into "+stage.getBranch()+".");
+        commit("Merged " + branch + " into " + stage.getBranch() + ".");
         if (conflicted) {
             System.out.println("Encountered a merge conflict.");
         }
@@ -285,12 +298,15 @@ public class Repository {
      *  the commit of given id.
      */
     private static void validateCheckout(String branch, String id) {
-        //check if there exists untracked file.
-        Commit currentCommit = getCommitFromHash(getHeadCommitCode());
-        TreeMap<String, String> trackedFiles = currentCommit.getTrackedFiles();
+        //check if there exists untracked file that would be overwritten.
+        String targetHashCode = id;
+        Commit targetCommit = getCommitFromHash(targetHashCode);
+        TreeMap<String, String> targetTrackedFiles = targetCommit.getTrackedFiles();
         List<String> workingFiles = Utils.plainFilenamesIn(CWD);
         for (String workingFile: workingFiles) {
-            if (!trackedFiles.containsKey(workingFile)) {
+            String workingHash = Utils.sha1(readContents(Utils.join(CWD, workingFile)));
+            if (targetTrackedFiles.containsKey(workingFile) &&
+                    targetTrackedFiles.get(workingFile).equals(workingHash)) {
                 mq("There is an untracked file in the way; delete it, or add and commit it first.");
             }
         }
@@ -299,9 +315,6 @@ public class Repository {
         for (String workingFile: workingFiles) {
             restrictedDelete(workingFile);
         }
-        String targetHashCode = id;
-        Commit targetCommit = getCommitFromHash(targetHashCode);
-        TreeMap<String, String> targetTrackedFiles = targetCommit.getTrackedFiles();
         for (Map.Entry<String, String> e: targetTrackedFiles.entrySet()) {
             File temp = Utils.join(CWD, e.getKey());
             File blob = Utils.join(BLOBS_DIR, e.getValue());
@@ -319,12 +332,12 @@ public class Repository {
         int x = 0;
         while (x < c1Ancestor.size() && x < c2Ancestor.size()) {
             if (!c1Ancestor.get(x).equals(c2Ancestor.get(x))) {
-                return c1Ancestor.get(x-1);
+                return c1Ancestor.get(x - 1);
             } else {
                 x += 1;
             }
         }
-        return c1Ancestor.get(x-1);
+        return c1Ancestor.get(x - 1);
     }
 
     private static ArrayList<String> getAncestors(Commit c) {
@@ -351,9 +364,14 @@ public class Repository {
 
     private static Commit getCommitFromHash(String hashCode) {
         if (hashCode.length() == UID_LENGTH) {
-            Commit res = Utils.readObject(Utils.join(COMMIT_DIR, hashCode), Commit.class);
-            res.restoreParent();
-            return res;
+            File commit = Utils.join(COMMIT_DIR, hashCode);
+            if (commit.exists()) {
+                Commit res = Utils.readObject(commit, Commit.class);
+                res.restoreParent();
+                return res;
+            } else {
+                return null;
+            }
         } else {
             List<String> commits = Utils.plainFilenamesIn(COMMIT_DIR);
             for (String code: commits) {

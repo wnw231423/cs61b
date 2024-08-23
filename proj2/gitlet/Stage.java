@@ -37,6 +37,7 @@ public class Stage implements Serializable {
             System.out.println("File doesn't exist.");
             System.exit(0);
         }
+        removeList.remove(fileName);
         String cwdCode = Utils.sha1(Utils.readContents(f));
         if (!trackedList.containsKey(fileName)) {
             addList.put(fileName, cwdCode);
@@ -50,7 +51,9 @@ public class Stage implements Serializable {
         updateStatus();
     }
 
-    /** Remove operation. Return false if neither the file is staged for addition nor it's tracked. */
+    /** Remove operation. Return false if neither the file is staged for
+     * addition nor it's tracked.
+     */
     public boolean rmFile(String fileName) {
         if (!trackedList.containsKey(fileName) && !addList.containsKey(fileName)) {
             return false;
@@ -91,8 +94,8 @@ public class Stage implements Serializable {
         }
     }
 
-    public void clearStageWithBranchChange(String branch, TreeMap<String, String> tf) {
-        this.branch = branch;
+    public void clearStageWithBranchChange(String b, TreeMap<String, String> tf) {
+        this.branch = b;
         this.trackedList = tf;
         this.addList.clear();
         this.removeList.clear();
@@ -133,9 +136,9 @@ public class Stage implements Serializable {
         s.append("*");
         s.append(this.branch);
         s.append("\n");
-        for (String branch: branches) {
-            if (!branch.equals(this.branch)) {
-                s.append(branch);
+        for (String b: branches) {
+            if (!b.equals(this.branch)) {
+                s.append(b);
                 s.append("\n");
             }
         }

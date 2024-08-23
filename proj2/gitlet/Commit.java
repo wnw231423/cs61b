@@ -43,7 +43,8 @@ public class Commit implements Serializable {
         restoreParent();
     }
 
-    public Commit(String parentCode, String parent2Code, String message, TreeMap<String, String> trackedFiles) {
+    public Commit(String parentCode, String parent2Code, String message,
+                  TreeMap<String, String> trackedFiles) {
         this(parentCode, message, trackedFiles);
         this.parent2Code = parent2Code;
     }
@@ -56,7 +57,7 @@ public class Commit implements Serializable {
 
     /** Restore its parent commit pointer from deserialization,
      * only be called by getCommitFromHash of Repository class. */
-    public void restoreParent(){
+    public void restoreParent() {
         if (parentCode == null) {
             this.parent = null;
         } else {
@@ -83,7 +84,9 @@ public class Commit implements Serializable {
         return Utils.sha1(Utils.serialize(this));
     }
 
-    public TreeMap<String, String> getTrackedFiles(){return this.trackedFiles;}
+    public TreeMap<String, String> getTrackedFiles() {
+        return this.trackedFiles;
+    }
 
     public String getMessage() {
         return message;
@@ -99,7 +102,8 @@ public class Commit implements Serializable {
     @Override
     public String toString() {
         String hashCode = getSha1();
-        SimpleDateFormat formatter = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy Z", Locale.ENGLISH);
+        SimpleDateFormat formatter = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy Z",
+                Locale.ENGLISH);
         String formattedDate = formatter.format(commitDate);
         StringBuilder s = new StringBuilder();
 

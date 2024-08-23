@@ -9,6 +9,9 @@ public class Main {
      *  <COMMAND> <OPERAND1> <OPERAND2> ... 
      */
     public static void main(String[] args) {
+        if (args.length == 0) {
+            Repository.mq("Please enter a command.");
+        }
         String firstArg = args[0];
         if (firstArg.equals("init")) {
                 if (args.length != 1) {
@@ -105,6 +108,9 @@ public class Main {
                         inOp();
                     }
                     Repository.merge(args[1]);
+                }
+                default -> {
+                    Repository.mq("No command with that name exists.");
                 }
             }
         }
