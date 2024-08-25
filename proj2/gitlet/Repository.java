@@ -213,28 +213,13 @@ public class Repository {
     }
 
     public static void merge(String branch) {
-        Stage stage = getStage();
-        if (!stage.getAddList().isEmpty() || !stage.getRemoveList().isEmpty()) {
-            mq("You have uncommitted changes.");
-        }
+        mergeCheck(branch);
+
         File targetBranchFile = Utils.join(BRANCH_DIR, branch);
-        if (!targetBranchFile.exists()) {
-            mq("A branch with that name does not exist.");
-        }
-        String currentBranch = stage.getBranch();
-        if (branch.equals(currentBranch)) {
-            mq("Cannot merge a branch with itself.");
-        }
+        Stage stage = getStage();
         String targetCommitHash = Utils.readContentsAsString(targetBranchFile);
         String currentCommitHash = Utils.readContentsAsString(HEAD_POINTER);
         String splitCommitHash = getSplitPoint(currentCommitHash, targetCommitHash);
-        if (splitCommitHash.equals(targetCommitHash)) {
-            mq("Given branch is an ancestor of the current branch.");
-        }
-        if (splitCommitHash.equals(currentCommitHash)) {
-            checkoutWithBranch(branch);
-            mq("Current branch fast-forwarded.");
-        }
 
         Commit currentCommit = getCommitFromHash(currentCommitHash);
         Commit splitCommit = getCommitFromHash(splitCommitHash);
@@ -275,17 +260,17 @@ public class Repository {
                     File other = Utils.join(BLOBS_DIR, targetTrackedList.get(file));
                     Utils.writeContents(Utils.join(CWD, file), "<<<<<<< HEAD\n",
                             Utils.readContents(head), "=======\n", Utils.readContents(other),
-                            ">>>>>>>");
+                            ">>>>>>>\n");
                     conflicted = true;
                 } else if (inHead && !inOther) {
                     File head = Utils.join(BLOBS_DIR, currentTrackedList.get(file));
                     Utils.writeContents(Utils.join(CWD, file), "<<<<<<< HEAD\n",
-                            Utils.readContents(head), "=======\n", ">>>>>>>");
+                            Utils.readContents(head), "=======\n", ">>>>>>>\n");
                     conflicted = true;
                 } else if (!inHead && inOther) {
                     File other = Utils.join(BLOBS_DIR, targetTrackedList.get(file));
                     Utils.writeContents(Utils.join(CWD, file), "<<<<<<< HEAD\n",
-                            "=======\n", Utils.readContents(other), ">>>>>>>");
+                            "=======\n", Utils.readContents(other), ">>>>>>>\n");
                     conflicted = true;
                 }
             }
@@ -298,6 +283,36 @@ public class Repository {
 
 
     /* Helper functions. */
+    private static void mergeCheck(String branch) {
+        Stage stage = getStage();
+        if (!stage.getAddList().isEmpty() || !stage.getRemoveList().isEmpty()) {
+            mq("You have uncommitted changes.");
+        }
+        File targetBranchFile = Utils.join(BRANCH_DIR, branch);
+        if (!targetBranchFile.exists()) {
+            mq("A branch with that name does not exist.");
+        }
+        String currentBranch = stage.getBranch();
+        if (branch.equals(currentBranch)) {
+            mq("Cannot merge a branch with itself.");
+        }
+        String targetCommitHash = Utils.readContentsAsString(targetBranchFile);
+        String currentCommitHash = Utils.readContentsAsString(HEAD_POINTER);
+        String splitCommitHash = getSplitPoint(currentCommitHash, targetCommitHash);
+        if (splitCommitHash.equals(targetCommitHash)) {
+            mq("Given branch is an ancestor of the current branch.");
+        }
+        if (splitCommitHash.equals(currentCommitHash)) {
+            checkoutWithBranch(branch);
+            mq("Current branch fast-forwarded.");
+        }
+    }
+
+    private static void mergeCheckoutFile(String f) {
+        if (!getStage().getTrackedList().containsKey(f) && Utils.join(CWD, f).exists()) {
+            mq("There is an untracked file in the way; delete it, or add and commit it first.");
+        }
+    }
 
     /** This method check if a working file is untracked in the
      *  current branch and would be overwritten. Then check to
