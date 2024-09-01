@@ -1,6 +1,8 @@
 # Gitlet Design Document
 
 **Name**: wnw231423
+**Something to say**: I've given up for the last merge test in dashboard. I feel bad for my codes and I
+don't want to refactor my codes anymore qaq.
 
 ## Classes and Data Structures
 
