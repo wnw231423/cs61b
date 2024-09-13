@@ -15,6 +15,8 @@ public class HexWorld {
     private final int HEIGHT = 100;
     private final int WIDTH = 100;
     TETile[][] world = new TETile[WIDTH][HEIGHT];
+    private final int seed = 231423;
+    private final Random RANDOM = new Random(seed);
 
     /**
      * To give one specific start point for drawing.
@@ -63,11 +65,45 @@ public class HexWorld {
         }
     }
 
+    public void tessellate(int size, Position start) {
+        // Because the world need exactly 19 hexes, so I do hard code here.
+        tessellateHelper(size, start, 5);
+        tessellateHelper(size, start.shift(size + (size - 1), size), 4);
+        tessellateHelper(size, start.shift(-(size + (size - 1)), size), 4);
+        tessellateHelper(size, start.shift((size + (size - 1)) * 2, size * 2), 3);
+        tessellateHelper(size, start.shift(-((size + (size - 1)) * 2), size * 2), 3);
+    }
+
+    public void tessellateHelper(int size, Position start, int num) {
+        for (int i = 0; i < num; i++) {
+            drawSingleHex(size, start, getRandomTile());
+            start = start.shift(0, 2 * size);
+        }
+    }
+
+    public TETile getRandomTile() {
+        int x = RANDOM.nextInt();
+        switch (x % 4) {
+            case 1 -> {
+                return Tileset.FLOWER;
+            }
+            case 2 -> {
+                return Tileset.WALL;
+            }
+            case 0 -> {
+                return Tileset.MOUNTAIN;
+            }
+            default -> {
+                return Tileset.AVATAR;
+            }
+        }
+    }
+
     public static void main(String[] args) {
         HexWorld h = new HexWorld();
         h.initWorldWithNothing();
         Position start = new Position(50, 20);
-        h.drawSingleHex(5, start, Tileset.WALL);
+        h.tessellate(4, start);
         TERenderer t = new TERenderer();
         t.initialize(h.WIDTH, h.HEIGHT);
         t.renderFrame(h.world);
