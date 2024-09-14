@@ -45,6 +45,11 @@ public class Engine {
         //
         // See proj3.byow.InputDemo for a demo of how you can make a nice clean interface
         // that works for many different input types.
+        int seed = Integer.parseInt(input.substring(1, input.length() - 1));
+        World world = new World(seed);
+        TERenderer tr = new TERenderer();
+        tr.initialize(World.WORLD_WIDTH, World.WORLD_HEIGHT);
+        tr.renderFrame(world.world);
 
         TETile[][] finalWorldFrame = null;
         return finalWorldFrame;
