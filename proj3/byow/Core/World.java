@@ -3,19 +3,23 @@ package byow.Core;
 import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
 
-import java.util.ArrayList;
-import java.util.Random;
+import java.time.Instant;
+import java.util.*;
 
 /** Including anything to do with world generation. */
 public class World {
     private int seed;
     private Random random;
     public TETile[][] world;
+
     private int[][] worldIndex;
+    private int currentIndex = 2;
 
     public static final int WORLD_WIDTH = 51;
     public static final int WORLD_HEIGHT = 51;
     public static final int ROOM_NUM = 10;
+
+    private static final int bendPercentage = 25;
 
     public enum Direction {UP, DOWN, LEFT, RIGHT;}
 
@@ -82,16 +86,115 @@ public class World {
             for (int j = r.ldp.y; j <= r.rup.y; j++) {
                 world[i][j] = Tileset.FLOOR; // Here can be other type of tile to distinguish
                 // room from other places.
-                worldIndex[i][j] = r.hashCode();
+                worldIndex[i][j] = currentIndex;
             }
         }
+        currentIndex += 1;
         return true;
     }
 
-    private static class Maze {
-        public Maze(Position start) {
-            Direction last = null;
+    private void generateMaze() {
+        for (int i = 1; i < WORLD_WIDTH; i += 2) {
+            for (int j = 1; j < WORLD_HEIGHT; j += 2) {
+                if (worldIndex[i][j] == 1) {
+                    generateMazeHelper(new Position(i, j), Direction.RIGHT);
+                }
+                currentIndex += 1;
+            }
         }
+    }
+
+    private void generateMazeHelper(Position start, Direction last) {
+        mark(start, currentIndex);
+        place(start, Tileset.FLOOR);
+
+        Direction next;
+        int bend = random.nextInt(100);
+        if (bend < bendPercentage) {
+            next = getRandomDirection();
+        } else {
+            next = last;
+        }
+
+        Position nextP = start.getNeighbor(next, 2);
+        if (placeable(nextP)) {
+            Position temp = start.getNeighbor(next, 1);
+            mark(temp, currentIndex);
+            place(temp, Tileset.FLOOR);
+            generateMazeHelper(nextP, next);
+        }
+
+        for (Direction d: Direction.values()) {
+            Position other = start.getNeighbor(d, 2);
+            if (placeable(other)) {
+                Position temp = start.getNeighbor(d, 1);
+                mark(temp, currentIndex);
+                place(temp, Tileset.FLOOR);
+                generateMazeHelper(other, d);
+            }
+        }
+    }
+
+    private static class ConnectorManager {
+        HashMap<HashSet<Integer>, HashSet<Position>> connectors;
+
+        public ConnectorManager() {
+            this.connectors = new HashMap<>();
+        }
+
+        public void put(HashSet<Integer> s, Position p) {
+            if (connectors.containsKey(s)) {
+                connectors.get(s).add(p);
+            } else {
+                HashSet<Position> temp = new HashSet<>();
+                temp.add(p);
+                connectors.put(s, temp);
+            }
+        }
+    }
+
+    private void connect() {
+        ConnectorManager connectors = new ConnectorManager();
+        for (int i = 1; i < WORLD_WIDTH - 1; i++) {
+            for (int j = 1; j < WORLD_HEIGHT - 1; j++) {
+                Position current = new Position(i, j);
+                //case 1: up and down connection:
+                Position up = current.getNeighbor(Direction.UP, 1);
+                Position down =current.getNeighbor(Direction.DOWN, 1);
+                if (getMark(current) == 0 && getMark(up) != getMark(down)) {
+                    HashSet<Integer> twoRegion = new HashSet<>();
+                    twoRegion.add(getMark(up));
+                    twoRegion.add(getMark(down));
+                    connectors.put(twoRegion, current);
+                }
+            }
+        }
+
+
+    }
+
+    private void place(Position p, TETile t) {
+        world[p.x][p.y] = t;
+    }
+
+    private void mark(Position p, int i) {
+        worldIndex[p.x][p.y] = i;
+    }
+
+    private int getMark(Position p) {
+        return worldIndex[p.x][p.y];
+    }
+
+    private boolean validate(Position p) {
+        return p.x >= 0 && p.x < WORLD_WIDTH && p.y >= 0 && p.y < WORLD_HEIGHT;
+    }
+
+    private boolean placeable(Position p) {
+        return validate(p) && (worldIndex[p.x][p.y] == 0 || worldIndex[p.x][p.y] == 1);
+    }
+
+    private Direction getRandomDirection() {
+        return Direction.values()[random.nextInt(Direction.values().length)];
     }
 
     private int getRandomOddInt(int bound) {
@@ -147,6 +250,7 @@ public class World {
         //TODO: Finish rest.
         init();
         addRooms();
-
+        generateMaze();
+        connect();
     }
 }
