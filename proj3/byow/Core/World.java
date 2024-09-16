@@ -14,12 +14,15 @@ public class World {
     private int[][] worldIndex;
     private int currentIndex = 2;
 
-    public static final int WORLD_WIDTH = 51;
+    public static final int WORLD_WIDTH = 101;
     public static final int WORLD_HEIGHT = 51;
-    public static final int ROOM_NUM = 10;
+    public static final int ROOM_NUM = 12;
 
     private static final int bendPercentage = 25;
     private static final int extraConnectionPercentage = 10;
+
+    private static final int simplifyNum = 10000;
+    private int simplifiedNum = 0;
 
     public enum Direction {UP, DOWN, LEFT, RIGHT;}
 
@@ -58,8 +61,8 @@ public class World {
     }
 
     private static class Room {
-        public static int ROOM_MIN_SIZE = 3;
-        public static int ROOM_MAX_SIZE = 15;
+        public static int ROOM_MIN_SIZE = 5;
+        public static int ROOM_MAX_SIZE = 21;
         public Position ldp, rup;//left down point, right up point.
 
         public Room(Position ldp, Position rup) {
@@ -209,12 +212,64 @@ public class World {
         }
     }
 
+    private void simplifyMaze() {
+        for (int i = 0; i < WORLD_WIDTH; i++) {
+            for (int j = 0; j < WORLD_HEIGHT; j++) {
+                if (simplifiedNum > simplifyNum) {
+                    return;
+                }
+                Position p = new Position(i, j);
+                simplifyHelper(p);
+            }
+        }
+    }
+
+    private void simplifyHelper(Position p) {
+        if (getTile(p) == Tileset.FLOOR) {
+            int spaceAround = 0;
+            Position close = null;
+            for (Direction d: Direction.values()) {
+                Position neighbor = p.getNeighbor(d, 1);
+                if (!validate(neighbor) || getTile(neighbor) == Tileset.NOTHING) {
+                    spaceAround += 1;
+                } else {
+                    close = neighbor;
+                }
+            }
+            if (spaceAround == 3 && simplifiedNum <= simplifyNum) {
+                place(p, Tileset.NOTHING);
+                simplifyHelper(close);
+                simplifiedNum += 1;
+            }
+        }
+    }
+
+    private void placeWall() {
+        for (int i = 0; i < WORLD_WIDTH; i+= 1) {
+            for (int j = 0; j < WORLD_HEIGHT; j+= 1) {
+                Position p = new Position(i, j);
+                if (getTile(p) == Tileset.NOTHING) {
+                    for (Direction d: Direction.values()) {
+                        Position neighbor = p.getNeighbor(d, 1);
+                        if (validate(neighbor) && getTile(neighbor) != Tileset.NOTHING && getTile(neighbor) != Tileset.WALL) {
+                            place(p, Tileset.WALL);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private void place(Position p, TETile t) {
         world[p.x][p.y] = t;
     }
 
     private void mark(Position p, int i) {
         worldIndex[p.x][p.y] = i;
+    }
+
+    private TETile getTile(Position p) {
+        return world[p.x][p.y];
     }
 
     private int getMark(Position p) {
@@ -272,5 +327,7 @@ public class World {
         addRooms();
         generateMaze();
         connect();
+        simplifyMaze();
+        placeWall();
     }
 }
