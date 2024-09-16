@@ -3,7 +3,6 @@ package byow.Core;
 import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
 
-import java.time.Instant;
 import java.util.*;
 
 /** Including anything to do with world generation. */
@@ -20,6 +19,7 @@ public class World {
     public static final int ROOM_NUM = 10;
 
     private static final int bendPercentage = 25;
+    private static final int extraConnectionPercentage = 10;
 
     public enum Direction {UP, DOWN, LEFT, RIGHT;}
 
@@ -93,13 +93,29 @@ public class World {
         return true;
     }
 
+    private void addRooms() {
+        int n = 0;
+        while (n < World.ROOM_NUM) {
+            int ldx = getRandomOddInt(WORLD_WIDTH);
+            int ldy = getRandomOddInt(WORLD_HEIGHT);
+
+            int rux = getRandomOddInt(ldx + Room.ROOM_MIN_SIZE - 1, ldx + Room.ROOM_MAX_SIZE - 1);
+            int ruy = getRandomOddInt(ldy + Room.ROOM_MIN_SIZE - 1, ldy + Room.ROOM_MAX_SIZE - 1);
+
+            Room r = new Room(new Position(ldx, ldy), new Position(rux, ruy));
+            if (createRoom(r)) {
+                n += 1;
+            }
+        }
+    }
+
     private void generateMaze() {
         for (int i = 1; i < WORLD_WIDTH; i += 2) {
             for (int j = 1; j < WORLD_HEIGHT; j += 2) {
                 if (worldIndex[i][j] == 1) {
                     generateMazeHelper(new Position(i, j), Direction.RIGHT);
+                    currentIndex += 1;
                 }
-                currentIndex += 1;
             }
         }
     }
@@ -135,42 +151,62 @@ public class World {
         }
     }
 
-    private static class ConnectorManager {
-        HashMap<HashSet<Integer>, HashSet<Position>> connectors;
+    private static class Connector {
+        Position p;
+        HashSet<Integer> regionSet;
 
-        public ConnectorManager() {
-            this.connectors = new HashMap<>();
-        }
-
-        public void put(HashSet<Integer> s, Position p) {
-            if (connectors.containsKey(s)) {
-                connectors.get(s).add(p);
-            } else {
-                HashSet<Position> temp = new HashSet<>();
-                temp.add(p);
-                connectors.put(s, temp);
-            }
+        public Connector(Position p, int x, int y) {
+            this.p = p;
+            this.regionSet = new HashSet<>();
+            regionSet.add(x);
+            regionSet.add(y);
         }
     }
 
     private void connect() {
-        ConnectorManager connectors = new ConnectorManager();
-        for (int i = 1; i < WORLD_WIDTH - 1; i++) {
-            for (int j = 1; j < WORLD_HEIGHT - 1; j++) {
-                Position current = new Position(i, j);
-                //case 1: up and down connection:
-                Position up = current.getNeighbor(Direction.UP, 1);
-                Position down =current.getNeighbor(Direction.DOWN, 1);
-                if (getMark(current) == 0 && getMark(up) != getMark(down)) {
-                    HashSet<Integer> twoRegion = new HashSet<>();
-                    twoRegion.add(getMark(up));
-                    twoRegion.add(getMark(down));
-                    connectors.put(twoRegion, current);
+        HashSet<Integer> union = new HashSet<>();
+        for (int i = 2; i < currentIndex; i++) {
+            union.add(i);
+        }
+
+        ArrayList<Connector> connectors = new ArrayList<>();
+
+        for (int i = 1; i < WORLD_WIDTH - 1; i += 1) {
+            for (int j = 1; j < WORLD_HEIGHT - 1; j += 1) {
+                Position tempP = new Position(i, j);
+                if (getMark(tempP) == 0) {
+                    int x = getMark(tempP.getNeighbor(Direction.UP, 1));
+                    int y = getMark(tempP.getNeighbor(Direction.DOWN, 1));
+                    if ((x != 0) && (y != 0) && (x != y)) {
+                        connectors.add(new Connector(tempP, x, y));
+                    }
+
+                    x = getMark(tempP.getNeighbor(Direction.LEFT, 1));
+                    y = getMark(tempP.getNeighbor(Direction.RIGHT, 1));
+                    if ((x != 0) && (y != 0) && x != y) {
+                        connectors.add(new Connector(tempP, x, y));
+                    }
                 }
             }
         }
 
-
+        while (union.size() != 1) {
+            Connector c = connectors.remove(random.nextInt(connectors.size()));
+            boolean hasConnected = false;
+            for (int x: c.regionSet) {
+                if (!union.contains(x)) {
+                    hasConnected = true;
+                }
+            }
+            if (!hasConnected) {
+                union.remove(c.regionSet.iterator().next());
+                place(c.p, Tileset.FLOOR);
+            } else {
+                if (random.nextInt(100) < extraConnectionPercentage) {
+                    place(c.p, Tileset.FLOOR);
+                }
+            }
+        }
     }
 
     private void place(Position p, TETile t) {
@@ -215,29 +251,13 @@ public class World {
         }
     }
 
-    private void addRooms() {
-        int n = 0;
-        while (n < World.ROOM_NUM) {
-            int ldx = getRandomOddInt(WORLD_WIDTH);
-            int ldy = getRandomOddInt(WORLD_HEIGHT);
-
-            int rux = getRandomOddInt(ldx + Room.ROOM_MIN_SIZE - 1, ldx + Room.ROOM_MAX_SIZE - 1);
-            int ruy = getRandomOddInt(ldy + Room.ROOM_MIN_SIZE - 1, ldy + Room.ROOM_MAX_SIZE - 1);
-
-            Room r = new Room(new Position(ldx, ldy), new Position(rux, ruy));
-            if (createRoom(r)) {
-                n += 1;
-            }
-        }
-    }
-
     private void init() {
         this.world = new TETile[WORLD_WIDTH][WORLD_HEIGHT];
         this.worldIndex = new int[WORLD_WIDTH][WORLD_HEIGHT];
         for (int i = 0; i < WORLD_WIDTH; i++) {
             for (int j = 0; j < WORLD_HEIGHT; j++) {
                 world[i][j] = Tileset.NOTHING;
-                if ((i % 2 != 0) || (j % 2 != 0)) {
+                if ((i % 2 != 0) && (j % 2 != 0)) {
                     worldIndex[i][j] = 1;
                 }
             }
